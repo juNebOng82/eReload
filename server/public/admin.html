@@ -85,6 +85,7 @@
   .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
   .badge-manual { background: var(--accent-bg); color: var(--accent); }
   .badge-rest_api { background: var(--danger-bg); color: var(--danger); }
+  .badge-dealer_app { background: var(--success-bg); color: var(--success); }
   .login-box { max-width: 320px; margin: 80px auto; text-align: center; }
   .login-box input { width: 100%; margin-bottom: 12px; box-sizing: border-box; }
   .login-box button { width: 100%; }
@@ -1525,8 +1526,8 @@
       if (!ussdLogsRows.length) { el.innerHTML = '<div class="empty">No USSD sends yet.</div>'; return; }
       let html = '<table><tr><th>Channel</th><th>Service Type</th><th>Company</th><th>Device Account</th><th>Date/Time</th><th>Phone No</th><th>Amount</th><th>Telco</th><th>Status</th><th>Reply</th></tr>';
       for (const r of ussdLogsRows) {
-        const badgeClass = r.channel === "manual" ? "badge-manual" : "badge-rest_api";
-        const badgeLabel = r.channel === "manual" ? "Manual" : "REST API";
+        const badgeClass = r.channel === "manual" ? "badge-manual" : r.channel === "dealer_app" ? "badge-dealer_app" : "badge-rest_api";
+        const badgeLabel = r.channel === "manual" ? "Manual" : r.channel === "dealer_app" ? "Dealer App" : "REST API";
         html += `<tr>
           <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
           <td>${r.service_type || "Reload"}</td>

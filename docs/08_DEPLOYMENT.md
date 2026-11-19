@@ -23,6 +23,7 @@
 5. Admin → Settings: set document prefixes, min/max, Latest App Version; Payment Gateway: Billplz keys, collection id, sandbox toggle; Billplz dashboard webhook → `https://<service>/api/billplz/callback`.
 6. Telco Configuration: enter real USSD templates for each telco/service.
 7. Android: add `google-services.json`, set `BASE_URL`/`APP_SECRET`, build, install, register, approve.
+8. Sub-dealer app: set `Api.BASE_URL` in `dealer-app/`, build (`./gradlew assembleRelease`), give the APK to sub-dealers (see `13_DEALER_APP.md`).
 
 ## Docker
 `node:20-slim`, `npm install --omit=dev`, `PORT=8080`, `CMD node index.js`.
