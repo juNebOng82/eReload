@@ -1,0 +1,47 @@
+plugins {
+    id("com.android.application")
+    id("com.google.gms.google-services")
+}
+
+android {
+    namespace = "com.ereload.app"
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "com.ereload.app"
+        minSdk = 26
+        targetSdk = 37
+        versionCode = 16
+        versionName = "1.16"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.19.0")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("com.google.android.material:material:1.14.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.2")
+    implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+
+    // Firebase Cloud Messaging (receives push-triggered top-up jobs)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-messaging")
+
+    // Simple HTTP client for calling our Cloud Run server
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+}

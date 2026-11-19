@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">eReload</string>
+    <string name="app_name_prototype">eReload Prototype</string>
+    <string name="hint_pin">PIN Code</string>
+    <string name="hint_amount">Amount</string>
+    <string name="hint_phone">Subscriber MSISDN (e.g. 0123456789)</string>
+    <string name="preview_placeholder">Preview: *303*PIN*1*AMOUNT*MSISDN#</string>
+    <string name="preview_format">Preview: %1$s</string>
+    <string name="btn_send">Send USSD</string>
+    <string name="error_empty_fields">Please fill PIN, amount, and phone number</string>
+    <string name="error_permission_denied">Permission denied for placing call</string>
+    <string name="error_permission_required">CALL_PHONE permission is required to send USSD</string>
+    <string name="ussd_result_format">Result: %1$s</string>
+    <string name="ussd_response_format">USSD Response: %1$s</string>
+    <string name="ussd_failed_format">USSD Failed: %1$s</string>
+    <string name="ussd_empty_response">Empty response</string>
+    <string name="ussd_error_failure">Failure</string>
+    <string name="ussd_error_service_unavailable">Service Unavailable</string>
+    <string name="ussd_error_unknown">Unknown error (code: %1$d)</string>
+    <string name="error_sending_ussd">Error sending USSD: %1$s</string>
+    <string name="status_label">Status: %1$s</string>
+    <string name="status_success">SUCCESS</string>
+    <string name="status_failed">FAILED</string>
+    <string name="reply_label">Reply Message:</string>
+</resources>

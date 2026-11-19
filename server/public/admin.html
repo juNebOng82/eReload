@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USSD Top Up — Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<script>
+  (function() {
+    var saved = localStorage.getItem("ussd_admin_theme");
+    if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  })();
+</script>
+<style>
+  :root {
+    --bg-page: #ffffff;
+    --bg-sidebar: #ffffff;
+    --bg-surface: #f8f9fa;
+    --bg-hover: #f3f4f6;
+    --bg-pill: #e6f1fb;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --text-muted: #9ca3af;
+    --text-pill: #185fa5;
+    --border: #eef0f2;
+    --border-strong: #dcdfe3;
+    --accent: #1a73e8;
+    --accent-bg: #e6f1fb;
+    --success: #1a8a4a;
+    --success-bg: #e6f4ea;
+    --danger: #d13438;
+    --danger-bg: #fce8e6;
+    --warning: #97690a;
+    --input-bg: #ffffff;
+    --input-border: #ccc;
+    --shadow: none;
+  }
+  [data-theme="dark"] {
+    --bg-page: #0f1520;
+    --bg-sidebar: #0b0f17;
+    --bg-surface: #161d29;
+    --bg-hover: #1c2534;
+    --bg-pill: #1e3a5f;
+    --text-primary: #e8eaed;
+    --text-secondary: #9aa4b2;
+    --text-muted: #6b7684;
+    --text-pill: #7fb4ed;
+    --border: #232c3a;
+    --border-strong: #2d3748;
+    --accent: #5b9bd5;
+    --accent-bg: #16324d;
+    --success: #4ade80;
+    --success-bg: #143824;
+    --danger: #f87171;
+    --danger-bg: #3a1a1a;
+    --warning: #eab308;
+    --input-bg: #161d29;
+    --input-border: #2d3748;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 0; color: var(--text-primary); background: var(--bg-page); }
+  h1 { font-size: 18px; margin: 0; color: var(--text-primary); }
+  .sub { color: var(--text-secondary); margin-bottom: 0; font-size: 13px; }
+  input[type="password"], input[type="text"], input[type="number"], input[type="date"], input[type="file"] { padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-primary); }
+  button { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-approve { background: var(--success); color: white; }
+  .btn-reject, .btn-revoke, .btn-delete { background: var(--danger); color: white; }
+  .btn-refresh { background: var(--bg-hover); color: var(--text-primary); }
+  section { margin-bottom: 40px; }
+  h2 { font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--text-primary); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-primary); }
+  th { color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .mono { font-family: monospace; font-size: 12px; word-break: break-all; }
+  .status-pending { color: var(--warning); font-weight: 600; }
+  .status-queued { color: #8b6fd6; font-weight: 600; }
+  .status-approved, .status-success { color: var(--success); font-weight: 600; }
+  .status-rejected, .status-revoked, .status-failed, .status-timeout { color: var(--danger); }
+  .empty { color: var(--text-muted); padding: 16px 0; font-size: 13px; }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  select { padding: 6px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-manual { background: var(--accent-bg); color: var(--accent); }
+  .badge-rest_api { background: var(--danger-bg); color: var(--danger); }
+  .login-box { max-width: 320px; margin: 80px auto; text-align: center; }
+  .login-box input { width: 100%; margin-bottom: 12px; box-sizing: border-box; }
+  .login-box button { width: 100%; }
+  .error-msg { color: var(--danger); font-size: 13px; margin-top: 8px; }
+  .field-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .field-row label { width: 120px; font-size: 13px; color: var(--text-secondary); }
+  .field-row input { flex: 1; }
+  .hint { color: var(--text-muted); font-size: 12px; margin-top: -6px; margin-bottom: 16px; }
+  .balance-card { background: var(--bg-surface); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .amount-plus { color: var(--success); font-weight: 600; }
+  .amount-minus { color: var(--danger); font-weight: 600; }
+  .key-value-box { background: var(--success-bg); border-radius: 8px; padding: 12px; margin-top: 12px; color: var(--text-primary); }
+
+  .app-shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 230px; flex-shrink: 0; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: width 0.15s; overflow: hidden; }
+  .sidebar.collapsed { width: 64px; }
+  .sidebar-header { display: flex; align-items: center; gap: 10px; padding: 16px; }
+  .sidebar.collapsed .sidebar-header { justify-content: center; padding: 16px 0; }
+  .sidebar-logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 13px; flex-shrink: 0; }
+  .sidebar-app-name { font-weight: 500; font-size: 14px; color: var(--text-primary); white-space: nowrap; }
+  .sidebar-toggle-row { padding: 0 16px 12px; display: flex; justify-content: flex-end; }
+  .sidebar.collapsed .sidebar-toggle-row { justify-content: center; padding: 0 0 12px; }
+  .sidebar-toggle-row i { font-size: 18px; color: var(--text-muted); cursor: pointer; }
+  .sidebar-nav { flex: 1; overflow-y: auto; }
+  .sidebar-section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 14px 16px 4px; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; margin: 2px 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--text-primary); font-size: 13px; }
+  .sidebar.collapsed .sidebar-item { justify-content: center; padding: 8px 0; margin: 2px 10px; }
+  .sidebar-item:hover { background: var(--bg-hover); }
+  .sidebar-item.active { background: var(--bg-pill); color: var(--text-pill); }
+  .sidebar-item.active:hover { background: var(--bg-pill); }
+  .sidebar-item i { font-size: 18px; flex-shrink: 0; }
+  .sidebar-bottom { padding: 12px 16px; border-top: 1px solid var(--border); }
+  .sidebar.collapsed .sidebar-bottom { padding: 12px 0; }
+  .theme-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; cursor: pointer; color: var(--text-primary); font-size: 13px; }
+  .sidebar.collapsed .theme-toggle-row { justify-content: center; }
+  .theme-toggle-row .label { display: flex; align-items: center; gap: 8px; }
+  .theme-toggle-row i { font-size: 18px; }
+  .theme-switch { width: 34px; height: 18px; border-radius: 9px; position: relative; flex-shrink: 0; background: var(--border-strong); }
+  .theme-switch.on { background: var(--accent); }
+  .theme-switch .knob { width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.15s; }
+  .theme-switch.on .knob { left: 18px; }
+  .sidebar-logout { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--text-secondary); font-size: 13px; cursor: pointer; }
+  .sidebar.collapsed .sidebar-logout { justify-content: center; }
+  .sidebar-logout i { font-size: 18px; }
+  .sidebar-logout:hover { color: var(--text-primary); }
+  .main-content { flex: 1; padding: 20px 32px 40px; max-width: 1100px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+</style>
+
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-box">
+    <h1>USSD Top Up Admin</h1>
+    <div class="sub">Log in to manage devices, users, and settings.</div>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button class="btn-primary" onclick="login()">Log In</button>
+    <div id="loginError" class="error-msg"></div>
+    <p style="margin-top:24px; font-size:12px; color:#999;">
+      First time setup? <a href="#" onclick="showBootstrap()">Create the first admin account</a>
+    </p>
+    <div id="bootstrapBox" style="display:none; margin-top:16px; text-align:left; border-top:1px solid #eee; padding-top:16px;">
+      <input type="password" id="bootstrapKey" placeholder="Bootstrap key (ADMIN_KEY)">
+      <input type="text" id="bootstrapUsername" placeholder="New admin username">
+      <input type="password" id="bootstrapPassword" placeholder="New admin password">
+      <button class="btn-primary" onclick="bootstrap()">Create Account</button>
+      <div id="bootstrapError" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- MAIN APP (shown after login) -->
+  <div id="mainApp" style="display:none;">
+    <div class="app-shell">
+      <div class="sidebar" id="sidebar"></div>
+      <div class="main-content">
+        <div class="topbar">
+          <div>
+            <h1>USSD Top Up — Admin</h1>
+            <div class="sub">Logged in as <b id="currentUsername"></b></div>
+          </div>
+          <button class="btn-refresh" onclick="logout()">Log Out</button>
+        </div>
+
+    <!-- DEVICE APPROVAL -->
+    <div class="panel" id="panel-devices">
+      <section>
+        <h2>Pending approval</h2>
+        <div id="pendingTable"></div>
+      </section>
+      <section>
+        <h2>All devices</h2>
+        <div class="hint">Custom Fields: multiple fields go in the same box, separated by commas — e.g. unique_code=111111, dealer_id=ABC. Each key must exactly match a placeholder used in that telco's template (e.g. unique_code matches {UNIQUE_CODE}).</div>
+        <button class="btn-refresh" onclick="loadAllDevices()">Refresh</button>
+        <div id="allDevicesTable" style="margin-top:12px;"></div>
+      </section>
+    </div>
+
+    <!-- DEVICE GROUPS -->
+    <div class="panel" id="panel-devicegroups">
+      <section>
+        <h2>Device Groups</h2>
+        <div class="hint">A named pool of devices. Assign a company's default/alternative group (Company Users tab) to route their top-ups to that pool instead of the shared general pool.</div>
+        <div id="deviceGroupsTable"></div>
+      </section>
+      <section>
+        <h2>Create new group</h2>
+        <div class="field-row"><label>Name</label><input type="text" id="newGroupName" placeholder="e.g. Client A Pool"></div>
+        <button class="btn-primary" onclick="createDeviceGroup()">Create Group</button>
+        <div id="groupError" class="error-msg"></div>
+      </section>
+    </div>
+
+    <!-- TEST TOP-UP -->
+    <div class="panel" id="panel-testtopup">
+      <section style="border:1px solid #eee; padding:16px; border-radius:8px; max-width:480px;">
+        <h2 style="border:none;">Reload Mockup</h2>
+        <div class="hint">Simulates a real /api/topup call — pick a company to test their actual credit/billing flow, or use General Testing to skip billing entirely (same as the legacy key).</div>
+
+        <div class="field-row"><label>Test As</label><select id="testCompanySelect" style="flex:1; padding:8px;"><option value="">General Testing (no billing)</option></select></div>
+        <div class="field-row"><label>Telco</label>
+          <select id="testTelco" style="flex:1; padding:8px;" onchange="renderTestExtraFields()"></select>
+        </div>
+        <div class="field-row"><label>Service Type</label><select id="testServiceType" style="flex:1; padding:8px;" onchange="renderTestExtraFields()"></select></div>
+        <div class="field-row"><label>Phone No.</label><input type="text" id="testPhone" value="0168094886"></div>
+        <div class="field-row"><label>Amount</label><input type="number" id="testAmount" value="10" min="0.01" step="0.01"></div>
+        <div id="testExtraFields"></div>
+        <div class="hint" id="testExtraFieldsHint" style="display:none;">Leave a field blank to use the value already stored on the device for it (e.g. a per-device code set in Device Approval), if any.</div>
+
+        <button class="btn-primary" onclick="sendTestTopup()">Send Test Top-up</button>
+        <div id="testTopupResult" style="margin-top:16px;"></div>
+      </section>
+    </div>
+
+    <!-- COMPANY USERS -->
+    <div class="panel" id="panel-companies">
+      <section>
+        <h2>Companies</h2>
+        <div id="companiesTable"></div>
+      </section>
+      <section>
+        <h2>Add new company</h2>
+        <div class="field-row"><label>Username</label><input type="text" id="newCompanyUsername"></div>
+        <div class="field-row"><label>Password</label><input type="password" id="newCompanyPassword"></div>
+        <div class="field-row"><label>Company Name</label><input type="text" id="newCompanyName"></div>
+        <button class="btn-primary" onclick="createCompany()">Create Company</button>
+        <div id="companyError" class="error-msg"></div>
+      </section>
+      <section>
+        <h2>Product Margins</h2>
+        <div class="hint">Margin can be set per Telco + Service Type combination for a company — e.g. 5% on UMobile Reload but 3% on Digi Bill Payment. Leave a cell blank to use that company's default margin (set in the table above) for that combination.</div>
+        <div class="field-row"><label>Company</label><select id="productMarginCompanySelect" style="flex:1; padding:8px;" onchange="loadProductMarginMatrix()"></select></div>
+        <div id="productMarginMatrix"></div>
+        <button class="btn-primary" id="saveProductMarginsBtn" style="display:none; margin-top:12px;" onclick="saveProductMargins()">Save Product Margins</button>
+        <div id="productMarginMsg" class="hint"></div>
+      </section>
+    </div>
+
+    <!-- RELOAD TRANSACTIONS -->
+    <div class="panel" id="panel-reloads">
+      <section style="border:1px solid #eee; padding:16px; border-radius:8px;">
+        <h2 style="border:none;">Create Credit Top Up Transaction</h2>
+        <div class="field-row"><label>Company</label><select id="reloadCompanySelect" style="flex:1; padding:8px;"></select></div>
+        <div class="field-row"><label>Amount</label><input type="number" id="reloadAmount" min="0.01" step="0.01"></div>
+        <div class="field-row"><label>Document Date</label><input type="date" id="reloadDate"></div>
+        <div class="field-row"><label>Remarks</label><input type="text" id="reloadRemarks"></div>
+        <div class="field-row"><label>Attachment</label><input type="file" id="reloadAttachment" accept="image/*,application/pdf"></div>
+        <button class="btn-primary" onclick="submitReload()">Submit Reload</button>
+        <div id="reloadMsg" class="hint"></div>
+      </section>
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">All Credit Top Up Transactions</h2>
+          <div>
+            <button class="btn-refresh" onclick="exportReloadTransactions()">Export CSV</button>
+            <button class="btn-refresh" onclick="loadReloadTransactions()">Refresh</button>
+          </div>
+        </div>
+        <div id="reloadTransactionsTable" style="margin-top:12px;"></div>
+      </section>
+    </div>
+
+    <!-- ADJUSTMENT TRANSACTIONS -->
+    <div class="panel" id="panel-adjustments">
+      <section style="border:1px solid #eee; padding:16px; border-radius:8px;">
+        <h2 style="border:none;">Create Adjustment Transaction</h2>
+        <div class="hint">Increases or decreases a company's credit WITHOUT an actual topup — e.g. correcting an error or a goodwill credit. Use a negative amount to reduce credit.</div>
+        <div class="field-row"><label>Company</label><select id="adjCompanySelect" style="flex:1; padding:8px;"></select></div>
+        <div class="field-row"><label>Amount</label><input type="number" id="adjAmount" step="0.01" placeholder="e.g. 10 or -10"></div>
+        <div class="field-row"><label>Document Date</label><input type="date" id="adjDate"></div>
+        <div class="field-row"><label>Remarks</label><input type="text" id="adjRemarks"></div>
+        <div class="field-row"><label>Attachment</label><input type="file" id="adjAttachment" accept="image/*,application/pdf"></div>
+        <button class="btn-primary" onclick="submitAdjustment()">Submit Adjustment</button>
+        <div id="adjMsg" class="hint"></div>
+      </section>
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">All Adjustment Transactions</h2>
+          <div>
+            <button class="btn-refresh" onclick="exportAdjustmentTransactions()">Export CSV</button>
+            <button class="btn-refresh" onclick="loadAdjustmentTransactions()">Refresh</button>
+          </div>
+        </div>
+        <div id="adjustmentTransactionsTable" style="margin-top:12px;"></div>
+      </section>
+    </div>
+
+    <!-- CREDIT INQUIRY -->
+    <div class="panel" id="panel-inquiry">
+      <section>
+        <h2>Credit Inquiry</h2>
+        <div class="filter-row" style="display:flex; gap:8px; align-items:center; margin-bottom:16px;">
+          <select id="inquiryCompanySelect" style="padding:8px;"></select>
+          <label>From</label><input type="date" id="inquiryFrom">
+          <label>To</label><input type="date" id="inquiryTo">
+          <button class="btn-primary" onclick="runCreditInquiry()">Search</button>
+          <button class="btn-refresh" onclick="exportCreditInquiry()">Export CSV</button>
+        </div>
+        <div id="inquiryResult"></div>
+      </section>
+    </div>
+
+    <!-- USSD LOG -->
+    <div class="panel" id="panel-ussdlogs">
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">USSD Log — Manual &amp; REST API sends</h2>
+          <button class="btn-refresh" onclick="loadUssdLogs()">Refresh</button>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <label>From</label><input type="date" id="ussdLogsFrom" style="flex:none;">
+          <label style="width:30px; text-align:center;">To</label><input type="date" id="ussdLogsTo" style="flex:none;">
+          <button class="btn-refresh" onclick="loadUssdLogs()">Apply</button>
+        </div>
+        <div id="ussdLogsTable" style="margin-top:12px;"></div>
+        <button class="btn-refresh" id="ussdLogsLoadMore" style="margin-top:12px; display:none;" onclick="loadMoreUssdLogs()">Load More</button>
+      </section>
+    </div>
+
+    <!-- OTHER LOGS -->
+    <div class="panel" id="panel-otherlogs">
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">Other Logs — device registration, errors, trail</h2>
+          <button class="btn-refresh" onclick="loadOtherLogs()">Refresh</button>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <label>From</label><input type="date" id="otherLogsFrom" style="flex:none;">
+          <label style="width:30px; text-align:center;">To</label><input type="date" id="otherLogsTo" style="flex:none;">
+          <button class="btn-refresh" onclick="loadOtherLogs()">Apply</button>
+        </div>
+        <div id="otherLogsTable" style="margin-top:12px;"></div>
+        <button class="btn-refresh" id="otherLogsLoadMore" style="margin-top:12px; display:none;" onclick="loadMoreOtherLogs()">Load More</button>
+      </section>
+    </div>
+
+    <!-- USER MAINTENANCE -->
+    <div class="panel" id="panel-users">
+      <section>
+        <h2>Admin users</h2>
+        <div id="usersTable"></div>
+      </section>
+      <section>
+        <h2>Add new admin user</h2>
+        <div class="field-row"><label>Username</label><input type="text" id="newUsername"></div>
+        <div class="field-row"><label>Password</label><input type="password" id="newPassword"></div>
+        <button class="btn-primary" onclick="createUser()">Create User</button>
+        <div id="userError" class="error-msg"></div>
+      </section>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <section>
+        <h2>API Secrets</h2>
+        <div class="hint">These are the secrets external callers (x-api-key) and the Android app (x-app-secret) must use. Changing them here takes effect immediately, no redeploy needed — but you must update the Android app and any external caller to match.</div>
+        <div class="field-row"><label>API Key</label><input type="text" id="settingsApiKey"></div>
+        <div class="field-row"><label>App Secret</label><input type="text" id="settingsAppSecret"></div>
+        <div class="field-row"><label>Reload Doc Prefix</label><input type="text" id="settingsDocPrefix" maxlength="4" style="width:80px;"></div>
+        <div class="field-row"><label>Adjustment Doc Prefix</label><input type="text" id="settingsAdjPrefix" maxlength="4" style="width:80px;"></div>
+        <div class="hint">Document prefixes are used for reload/adjustment transaction numbers, e.g. RC2608001 or AJ2608001 (prefix + year/month + sequence). Each has its own separate numbering series.</div>
+
+        <div class="field-row">
+          <label>Legacy Key</label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; flex:none;">
+            <input type="checkbox" id="settingsLegacyEnabled" style="width:auto;"> Enabled (allow the API Key above for testing, outside company billing)
+          </label>
+        </div>
+        <div class="hint">Turn this OFF once every real caller has migrated to their own company API key (from /portal.html). While ON, the API Key above can call /api/topup with no credit tracking — useful for your own testing, but should not be given to real customers.</div>
+
+        <div class="field-row"><label>Min Topup</label><input type="number" id="settingsMinTopup" style="width:100px;"></div>
+        <div class="field-row"><label>Max Topup</label><input type="number" id="settingsMaxTopup" style="width:100px;"></div>
+        <div class="hint">Guard rails applied to every /api/topup call — catches typos like an accidental extra zero.</div>
+
+        <div class="field-row"><label>Latest App Version</label><input type="text" id="settingsLatestAppVersion" placeholder="e.g. 1.16" style="width:100px;"></div>
+        <div class="hint">Set this to the versionName of whatever APK you most recently distributed (see app/build.gradle). Any device reporting a different version — or none at all — gets flagged as outdated in All Devices.</div>
+
+        <button class="btn-primary" onclick="saveSettings()">Save</button>
+        <div id="settingsMsg" class="hint"></div>
+      </section>
+    </div>
+
+    <!-- PAYMENT GATEWAY (Billplz) -->
+    <div class="panel" id="panel-billplz">
+      <section>
+        <h2>Billplz Configuration</h2>
+        <div class="hint">Lets companies reload their own credit via FPX / DuitNow Transfer, without waiting for an admin reload. Get your Secret Key, X Signature Key, and Collection ID from your Billplz Dashboard → Settings → Keys & Integration.</div>
+
+        <div class="field-row"><label>Secret Key</label><input type="password" id="billplzSecretKey" placeholder="Leave blank to keep current"></div>
+        <div id="billplzSecretKeyStatus" class="hint" style="margin-top:-8px;"></div>
+
+        <div class="field-row"><label>X Signature Key</label><input type="password" id="billplzXSignatureKey" placeholder="Leave blank to keep current"></div>
+        <div id="billplzXSigKeyStatus" class="hint" style="margin-top:-8px;"></div>
+
+        <div class="field-row"><label>Collection ID</label><input type="text" id="billplzCollectionId"></div>
+
+        <div class="field-row">
+          <label>Environment</label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; flex:none;">
+            <input type="checkbox" id="billplzSandbox" style="width:auto;"> Sandbox mode (uncheck to go live with real payments)
+          </label>
+        </div>
+
+        <div class="field-row"><label>Min Reload (RM)</label><input type="number" id="billplzMinReload" style="width:100px;"></div>
+        <div class="field-row"><label>Max Reload (RM)</label><input type="number" id="billplzMaxReload" style="width:100px;"></div>
+        <div class="field-row"><label>Online Doc Prefix</label><input type="text" id="billplzOnlinePrefix" maxlength="4" style="width:80px;"></div>
+        <div class="hint">Online reloads (paid via Billplz) get their own document number series, e.g. OL2608001 — separate from manual Reload (RC) and Adjustment (AJ) numbers.</div>
+
+        <button class="btn-primary" onclick="saveBillplzSettings()">Save Configuration</button>
+        <div id="billplzSettingsMsg" class="hint"></div>
+      </section>
+
+      <section>
+        <h2>Payment Methods</h2>
+        <div class="hint">Loads the actual payment methods available on your Billplz account. Check only the ones you want customers to see — e.g. FPX and DuitNow Transfer — then save. Everything unchecked gets disabled on Billplz's side.</div>
+        <button class="btn-refresh" onclick="loadBillplzPaymentMethods()">Load Payment Methods</button>
+        <div id="billplzMethodsTable" style="margin-top:12px;"></div>
+        <button class="btn-primary" id="billplzSaveMethodsBtn" style="display:none; margin-top:12px;" onclick="saveBillplzPaymentMethods()">Save Payment Methods</button>
+        <div id="billplzMethodsMsg" class="hint"></div>
+      </section>
+    </div>
+
+    <!-- TELCOS -->
+    <div class="panel" id="panel-telcos">
+      <section>
+        <h2>Telcos</h2>
+        <div class="hint">The full list of telcos this system supports. Add one here first, then configure its USSD templates in Telco Configuration and approve devices for it in Device Approval.</div>
+        <div id="telcosTable"></div>
+      </section>
+      <section>
+        <h2>Add new telco</h2>
+        <div class="field-row"><label>Code</label><input type="text" id="newTelcoCode" placeholder="e.g. REDONE" style="text-transform:uppercase;"></div>
+        <div class="field-row"><label>Display Name</label><input type="text" id="newTelcoName" placeholder="e.g. RedONE (optional, defaults to code)"></div>
+        <button class="btn-primary" onclick="createTelco()">Create Telco</button>
+        <div id="telcoError" class="error-msg"></div>
+      </section>
+    </div>
+
+    <!-- SERVICE TYPES -->
+    <div class="panel" id="panel-servicetypes">
+      <section>
+        <h2>Service Types</h2>
+        <div class="hint">A telco can support multiple service types — Reload, Bill Payment, or anything else you add. "Reload" always exists and can't be deleted. Any extra info a specific telco's version of a service needs (e.g. Digi's Reload needing a unique code that other telcos don't) is defined directly in that telco's template — see Telco Configuration.</div>
+        <div id="serviceTypesTable"></div>
+      </section>
+      <section>
+        <h2>Add new service type</h2>
+        <div class="field-row"><label>Name</label><input type="text" id="newServiceTypeName" placeholder="e.g. Bill Payment"></div>
+        <button class="btn-primary" onclick="createServiceType()">Create Service Type</button>
+        <div id="serviceTypeError" class="error-msg"></div>
+      </section>
+    </div>
+
+    <!-- TELCO CONFIGURATION -->
+    <div class="panel" id="panel-telcoconfig">
+      <section>
+        <h2>Telco Configuration</h2>
+        <div class="hint">For each telco, enable the service types it supports and set the USSD template for each. Templates use {PIN}, {AMOUNT}, {PHONE}, and any extra fields defined for that service type (e.g. {ACCOUNT_NUMBER}). {PIN} is filled in on the device — never sent to or stored on this server.</div>
+        <div id="telcoConfigTable"></div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveTelcoConfig()">Save All Changes</button>
+        <div id="telcoConfigMsg" class="hint"></div>
+      </section>
+    </div>
+
+    <!-- STATS -->
+    <div class="panel active" id="panel-stats">
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">Success Rate by Telco</h2>
+          <div>
+            <select id="statsDays" onchange="loadStats()" style="padding:6px;">
+              <option value="1">Last 24 hours</option>
+              <option value="7" selected>Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 90 days</option>
+            </select>
+            <button class="btn-refresh" onclick="loadStats()">Refresh</button>
+          </div>
+        </div>
+        <div id="statsTable" style="margin-top:16px;"></div>
+      </section>
+      <section>
+        <h2>Success Rate by Company</h2>
+        <div id="companyStatsTable"></div>
+      </section>
+    </div>
+
+    <!-- AUDIT LOG -->
+    <div class="panel" id="panel-audit">
+      <section>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">Admin Action Audit Trail</h2>
+          <button class="btn-refresh" onclick="loadAuditLog()">Refresh</button>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <label>From</label><input type="date" id="auditLogFrom" style="flex:none;">
+          <label style="width:30px; text-align:center;">To</label><input type="date" id="auditLogTo" style="flex:none;">
+          <button class="btn-refresh" onclick="loadAuditLog()">Apply</button>
+        </div>
+        <div id="auditLogTable" style="margin-top:16px;"></div>
+        <button class="btn-refresh" id="auditLogLoadMore" style="margin-top:12px; display:none;" onclick="loadMoreAuditLog()">Load More</button>
+      </section>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cachedTelcos = []; // array of { code, name }, loaded from server — see loadTelcosCache()
+    const baseUrl = window.location.origin;
+    let sessionToken = localStorage.getItem("ussd_admin_token") || null;
+    let currentUsername = localStorage.getItem("ussd_admin_username") || null;
+
+    // ---------- Auth ----------
+    function showBootstrap() {
+      document.getElementById("bootstrapBox").style.display = "block";
+      return false;
+    }
+
+    async function bootstrap() {
+      const key = document.getElementById("bootstrapKey").value;
+      const username = document.getElementById("bootstrapUsername").value.trim();
+      const password = document.getElementById("bootstrapPassword").value;
+      const errEl = document.getElementById("bootstrapError");
+      errEl.textContent = "";
+      try {
+        const res = await fetch(baseUrl + "/api/admin/bootstrap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-admin-key": key },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed");
+        alert("Admin account created. You can now log in.");
+        document.getElementById("bootstrapBox").style.display = "none";
+      } catch (e) {
+        errEl.textContent = e.message;
+      }
+    }
+
+    async function login() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const errEl = document.getElementById("loginError");
+      errEl.textContent = "";
+      try {
+        const res = await fetch(baseUrl + "/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Login failed");
+        sessionToken = data.token;
+        currentUsername = data.username;
+        localStorage.setItem("ussd_admin_token", sessionToken);
+        localStorage.setItem("ussd_admin_username", currentUsername);
+        showMainApp();
+      } catch (e) {
+        errEl.textContent = e.message;
+      }
+    }
+
+    function logout() {
+      sessionToken = null;
+      currentUsername = null;
+      localStorage.removeItem("ussd_admin_token");
+      localStorage.removeItem("ussd_admin_username");
+      document.getElementById("mainApp").style.display = "none";
+      document.getElementById("loginScreen").style.display = "block";
+    }
+
+    function showMainApp() {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("mainApp").style.display = "block";
+      document.getElementById("currentUsername").textContent = currentUsername;
+      renderSidebar();
+      loadTelcosCache();
+      loadStats();
+    }
+
+    async function loadTelcosCache() {
+      try {
+        const data = await callApi("/api/admin/telcos");
+        cachedTelcos = data.telcos;
+      } catch (e) { /* non-critical — screens that need it will retry */ }
+    }
+
+    async function callApi(path, options = {}) {
+      const res = await fetch(baseUrl + path, {
+        ...options,
+        headers: {
+          "Authorization": "Bearer " + sessionToken,
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+      if (res.status === 401) {
+        logout();
+        throw new Error("Session expired, please log in again");
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || ("HTTP " + res.status));
+      }
+      return res.json();
+    }
+
+    // ---------- Tabs ----------
+    function switchTab(tab) {
+      document.querySelectorAll(".panel").forEach(el => el.classList.remove("active"));
+      document.getElementById("panel-" + tab).classList.add("active");
+
+      if (tab === "devices") { checkTimeoutsThenRefresh(); }
+      if (tab === "devicegroups") loadDeviceGroups();
+      if (tab === "testtopup") { populateCompanyDropdowns(); populateTestServiceTypes(); }
+      if (tab === "companies") { loadCompanies(); populateProductMarginCompanies(); }
+      if (tab === "reloads") { populateCompanyDropdowns(); loadReloadTransactions(); }
+      if (tab === "adjustments") { populateCompanyDropdowns(); loadAdjustmentTransactions(); }
+      if (tab === "inquiry") populateCompanyDropdowns();
+      if (tab === "ussdlogs") loadUssdLogs();
+      if (tab === "otherlogs") loadOtherLogs();
+      if (tab === "users") loadUsers();
+      if (tab === "settings") loadSettings();
+      if (tab === "billplz") loadBillplzSettings();
+      if (tab === "telcos") loadTelcos();
+      if (tab === "servicetypes") loadServiceTypes();
+      if (tab === "telcoconfig") loadTelcoConfig();
+      if (tab === "stats") loadStats();
+      if (tab === "audit") loadAuditLog();
+    }
+
+    // ---------- Sidebar navigation ----------
+    const MENU = [
+      { section: null, items: [
+        { label: "Home", icon: "ti-home", tab: "stats" }
+      ]},
+      { section: "Accounts", items: [
+        { label: "Account books (Company User)", icon: "ti-users", tab: "companies" }
+      ]},
+      { section: "Transaction", items: [
+        { label: "Credit Top Up Transaction", icon: "ti-arrow-down-circle", tab: "reloads" },
+        { label: "Adjustment Transactions", icon: "ti-adjustments", tab: "adjustments" },
+        { label: "Reload Mockup", icon: "ti-plus", tab: "testtopup" }
+      ]},
+      { section: "Inquiry", items: [
+        { label: "Credit Inquiry", icon: "ti-search", tab: "inquiry" }
+      ]},
+      { section: "Maintenance", items: [
+        { label: "User Maintenance", icon: "ti-user-cog", tab: "users" },
+        { label: "Device Approval", icon: "ti-device-mobile-check", tab: "devices" },
+        { label: "Device Groups", icon: "ti-stack-2", tab: "devicegroups" }
+      ]},
+      { section: "Settings", items: [
+        { label: "General", icon: "ti-settings", tab: "settings" },
+        { label: "Payment Gateway", icon: "ti-credit-card", tab: "billplz" },
+        { label: "Telcos", icon: "ti-antenna-bars-5", tab: "telcos" },
+        { label: "Service Types", icon: "ti-category", tab: "servicetypes" },
+        { label: "Telco Configuration", icon: "ti-antenna", tab: "telcoconfig" }
+      ]},
+      { section: "Log", items: [
+        { label: "USSD Log", icon: "ti-file-text", tab: "ussdlogs" },
+        { label: "Misc Log", icon: "ti-notes", tab: "otherlogs" },
+        { label: "Audit Log", icon: "ti-history", tab: "audit" }
+      ]}
+    ];
+
+    let currentTab = "stats";
+    let sidebarCollapsed = localStorage.getItem("ussd_admin_sidebar_collapsed") === "1";
+    let darkMode = localStorage.getItem("ussd_admin_theme") === "dark";
+
+    function renderSidebar() {
+      const sb = document.getElementById("sidebar");
+      sb.classList.toggle("collapsed", sidebarCollapsed);
+      sb.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.className = "sidebar-header";
+      header.innerHTML = `<div class="sidebar-logo">U</div>` + (sidebarCollapsed ? "" : `<span class="sidebar-app-name">USSD admin</span>`);
+      sb.appendChild(header);
+
+      const toggleRow = document.createElement("div");
+      toggleRow.className = "sidebar-toggle-row";
+      toggleRow.innerHTML = `<i class="ti ${sidebarCollapsed ? "ti-layout-sidebar-left-expand" : "ti-layout-sidebar-left-collapse"}"></i>`;
+      toggleRow.title = sidebarCollapsed ? "Expand menu" : "Collapse menu";
+      toggleRow.onclick = toggleSidebarCollapse;
+      sb.appendChild(toggleRow);
+
+      const nav = document.createElement("div");
+      nav.className = "sidebar-nav";
+      MENU.forEach(group => {
+        if (group.section && !sidebarCollapsed) {
+          const label = document.createElement("div");
+          label.className = "sidebar-section-label";
+          label.textContent = group.section;
+          nav.appendChild(label);
+        }
+        group.items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "sidebar-item" + (currentTab === item.tab ? " active" : "");
+          row.title = item.label;
+          row.innerHTML = `<i class="ti ${item.icon}"></i>` + (sidebarCollapsed ? "" : `<span>${item.label}</span>`);
+          row.onclick = () => selectTab(item.tab);
+          nav.appendChild(row);
+        });
+      });
+      sb.appendChild(nav);
+
+      const bottom = document.createElement("div");
+      bottom.className = "sidebar-bottom";
+
+      const themeRow = document.createElement("div");
+      themeRow.className = "theme-toggle-row";
+      themeRow.innerHTML = sidebarCollapsed
+        ? `<i class="ti ${darkMode ? "ti-moon" : "ti-sun"}"></i>`
+        : `<span class="label"><i class="ti ${darkMode ? "ti-moon" : "ti-sun"}"></i>Dark mode</span><span class="theme-switch${darkMode ? " on" : ""}"><span class="knob"></span></span>`;
+      themeRow.title = "Toggle dark mode";
+      themeRow.onclick = toggleDarkMode;
+      bottom.appendChild(themeRow);
+
+      const logoutRow = document.createElement("div");
+      logoutRow.className = "sidebar-logout";
+      logoutRow.innerHTML = `<i class="ti ti-logout"></i>` + (sidebarCollapsed ? "" : "Log out");
+      logoutRow.title = "Log out";
+      logoutRow.onclick = logout;
+      bottom.appendChild(logoutRow);
+
+      sb.appendChild(bottom);
+    }
+
+    function toggleSidebarCollapse() {
+      sidebarCollapsed = !sidebarCollapsed;
+      localStorage.setItem("ussd_admin_sidebar_collapsed", sidebarCollapsed ? "1" : "0");
+      renderSidebar();
+    }
+
+    function toggleDarkMode() {
+      darkMode = !darkMode;
+      document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+      localStorage.setItem("ussd_admin_theme", darkMode ? "dark" : "light");
+      renderSidebar();
+    }
+
+    function selectTab(tab) {
+      currentTab = tab;
+      switchTab(tab);
+      renderSidebar();
+    }
+
+    // ---------- Device Approval ----------
+    async function loadPendingDevices() {
+      await loadDeviceGroupsCache();
+      if (!cachedTelcos.length) await loadTelcosCache();
+      const el = document.getElementById("pendingTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/pending-devices");
+        if (!data.pending.length) { el.innerHTML = '<div class="empty">No pending devices.</div>'; return; }
+        const groupOpts = '<option value="">No Group (General Pool)</option>' +
+          cachedDeviceGroups.map(g => `<option value="${g.group_id}">${g.name}</option>`).join("");
+        let html = '<table><tr><th>Installation ID</th><th>Requested Telco</th><th>Requested At</th><th>Approve as</th><th>Group</th><th></th></tr>';
+        for (const r of data.pending) {
+          const opts = cachedTelcos.map(t => `<option value="${t.code}" ${t.code === r.requested_telco ? "selected" : ""}>${t.name}</option>`).join("");
+          html += `<tr>
+            <td class="mono">${r.installation_id}</td>
+            <td>${r.requested_telco}</td>
+            <td>${formatDate(r.requested_at)}</td>
+            <td><select id="telco-${r.installation_id}">${opts}</select></td>
+            <td><select id="group-${r.installation_id}">${groupOpts}</select></td>
+            <td class="actions">
+              <button class="btn-approve" onclick="approveDevice('${r.installation_id}')">Approve</button>
+              <button class="btn-reject" onclick="rejectDevice('${r.installation_id}')">Reject</button>
+            </td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function approveDevice(id) {
+      const telco = document.getElementById("telco-" + id).value;
+      const groupId = document.getElementById("group-" + id).value;
+      try {
+        await callApi("/api/admin/approve-device", { method: "POST", body: JSON.stringify({ installation_id: id, telco, group_id: groupId || null }) });
+        loadPendingDevices(); loadAllDevices();
+      } catch (e) { alert("Approve failed: " + e.message); }
+    }
+
+    async function rejectDevice(id) {
+      if (!confirm("Reject this device request?")) return;
+      try {
+        await callApi("/api/admin/reject-device", { method: "POST", body: JSON.stringify({ installation_id: id }) });
+        loadPendingDevices(); loadAllDevices();
+      } catch (e) { alert("Reject failed: " + e.message); }
+    }
+
+    async function revokeDevice(installationId) {
+      if (!confirm(`Revoke this specific device? If a different device has since taken over its telco/group slot, that one is left untouched.`)) return;
+      try {
+        await callApi("/api/admin/revoke-device", { method: "POST", body: JSON.stringify({ installation_id: installationId }) });
+        loadAllDevices();
+      } catch (e) { alert("Revoke failed: " + e.message); }
+    }
+
+    async function checkTimeoutsThenRefresh() {
+      try { await callApi("/api/admin/check-timeouts", { method: "POST" }); } catch (e) { /* non-critical */ }
+      loadPendingDevices();
+      loadAllDevices();
+    }
+
+    async function loadAllDevices() {
+      const el = document.getElementById("allDevicesTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/devices");
+        if (!data.devices.length) { el.innerHTML = '<div class="empty">No devices have registered yet.</div>'; return; }
+        if (!data.latest_app_version) {
+          el.innerHTML = '<div class="hint" style="margin-bottom:12px;">Set "Latest App Version" in Settings → General to enable outdated-device detection.</div>';
+        } else {
+          el.innerHTML = "";
+        }
+        let html = '<table><tr><th>Installation ID</th><th>Status</th><th>App Version</th><th>Telco</th><th>Group</th><th>Account</th><th>Registered Phone No.</th><th>Custom Fields</th><th>Current Job</th><th>Queued</th><th>Last Callback</th><th>Timeout (sec)</th><th></th></tr>';
+        for (const r of data.devices) {
+          const telcoForActions = r.approved_telco;
+          const groupIdForActions = r.group_id || "";
+          const isBusy = r.status === "approved" && r.current_job_id;
+          const rowKey = r.installation_id;
+          const customFieldsStr = Object.entries(r.custom_fields || {}).map(([k, v]) => `${k}=${v}`).join(", ");
+
+          let versionDisplay = '<span style="color:var(--text-muted);">-</span>';
+          if (r.app_version) {
+            versionDisplay = r.is_outdated
+              ? `<span style="color:var(--danger); font-weight:600;">${r.app_version} (Outdated)</span>`
+              : `<span>${r.app_version}</span>`;
+          } else if (r.status === "approved") {
+            versionDisplay = '<span style="color:var(--warning); font-weight:600;">Unknown</span>';
+          }
+
+          let lastSeenDisplay = "-";
+          if (r.status === "approved") {
+            if (!r.last_callback_at) {
+              lastSeenDisplay = '<span style="color:#b8860b;">Never</span>';
+            } else {
+              const hoursAgo = (Date.now() - new Date(r.last_callback_at).getTime()) / 3600000;
+              const color = hoursAgo > 24 ? "#ea4335" : "#34a853";
+              lastSeenDisplay = `<span style="color:${color};">${formatDate(r.last_callback_at)}</span>`;
+            }
+          }
+
+          html += `<tr>
+            <td class="mono">${r.installation_id}</td>
+            <td class="status-${r.status}">${r.status}</td>
+            <td>${versionDisplay}</td>
+            <td>${r.approved_telco || r.requested_telco || "-"}</td>
+            <td>${r.group_name || "-"}</td>
+            <td><input type="text" id="account-${rowKey}" value="${r.account || ""}" placeholder="e.g. Staff A" style="width:100px;"></td>
+            <td><input type="text" id="phone-${rowKey}" value="${r.registered_phone_number || ""}" placeholder="e.g. 0123456789" style="width:110px;"></td>
+            <td><input type="text" id="customfields-${rowKey}" value="${customFieldsStr.replace(/"/g, "&quot;")}" placeholder="e.g. unique_code=111111, dealer_id=ABC" style="width:180px;"></td>
+            <td class="mono">${r.current_job_id || (r.status === "approved" ? "idle" : "-")}</td>
+            <td>${r.status === "approved" ? r.queue_count : "-"}</td>
+            <td>${lastSeenDisplay}</td>
+            <td>${r.status === "approved" ? `<input type="number" id="timeout-${telcoForActions}-${groupIdForActions}" value="${r.timeout_seconds}" min="5" max="600" style="width:70px;">` : "-"}</td>
+            <td class="actions">
+              <button class="btn-primary" onclick="saveDevice('${rowKey}', '${telcoForActions || ""}', '${groupIdForActions}')">Save</button>
+              ${isBusy ? `<button class="btn-reject" onclick="forceRelease('${telcoForActions}', '${groupIdForActions}')">Release Now</button>` : ""}
+              ${r.status === "approved" ? `<button class="btn-revoke" onclick="revokeDevice('${rowKey}')">Revoke</button>` : ""}
+            </td>
+          </tr>`;
+        }
+        el.innerHTML += html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    // Single Save button per device — updates Account/Phone/Custom Fields
+    // and (if approved) the timeout in one action, instead of two separate
+    // buttons for what's conceptually one "save this device's settings" step.
+    async function saveDevice(installationId, telco, groupId) {
+      const account = document.getElementById("account-" + installationId).value.trim();
+      const registeredPhone = document.getElementById("phone-" + installationId).value.trim();
+      const customFieldsRaw = document.getElementById("customfields-" + installationId).value.trim();
+
+      const custom_fields = {};
+      if (customFieldsRaw) {
+        for (const pair of customFieldsRaw.split(",")) {
+          const [k, ...rest] = pair.split("=");
+          const key = k.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+          const value = rest.join("=").trim();
+          if (key && value) custom_fields[key] = value;
+        }
+      }
+
+      try {
+        await callApi(`/api/admin/devices-registry/${installationId}/info`, {
+          method: "POST",
+          body: JSON.stringify({ account, registered_phone_number: registeredPhone, custom_fields })
+        });
+
+        const timeoutInput = telco ? document.getElementById(`timeout-${telco}-${groupId}`) : null;
+        if (timeoutInput) {
+          await callApi(`/api/admin/devices/${telco}/timeout`, {
+            method: "POST",
+            body: JSON.stringify({ timeout_seconds: parseInt(timeoutInput.value), group_id: groupId || null })
+          });
+        }
+      } catch (e) { alert("Failed to save: " + e.message); }
+    }
+
+    async function forceRelease(telco, groupId) {
+      if (!confirm(`Release the current job for ${telco} now, without waiting for its timeout? The stuck job will be marked as timed out.`)) return;
+      try {
+        await callApi(`/api/admin/devices/${telco}/force-release`, { method: "POST", body: JSON.stringify({ group_id: groupId || null }) });
+        loadAllDevices();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    // ---------- Company Users ----------
+    let cachedCompanies = [];
+    let cachedDeviceGroups = [];
+
+    async function loadDeviceGroupsCache() {
+      const data = await callApi("/api/admin/device-groups");
+      cachedDeviceGroups = data.groups;
+    }
+
+    async function loadDeviceGroups() {
+      const el = document.getElementById("deviceGroupsTable");
+      el.innerHTML = "Loading...";
+      try {
+        await loadDeviceGroupsCache();
+        if (!cachedDeviceGroups.length) { el.innerHTML = '<div class="empty">No device groups yet — devices stay in the shared general pool until you create one.</div>'; return; }
+        let html = '<table><tr><th>Name</th><th>Group ID</th><th>Created</th><th></th></tr>';
+        for (const g of cachedDeviceGroups) {
+          html += `<tr>
+            <td>${g.name}</td>
+            <td class="mono">${g.group_id}</td>
+            <td>${formatDate(g.created_at)}</td>
+            <td><button class="btn-delete" onclick="deleteDeviceGroup('${g.group_id}')">Delete</button></td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function createDeviceGroup() {
+      const name = document.getElementById("newGroupName").value.trim();
+      const errEl = document.getElementById("groupError");
+      errEl.textContent = "";
+      if (!name) { errEl.textContent = "Enter a name"; return; }
+      try {
+        await callApi("/api/admin/device-groups", { method: "POST", body: JSON.stringify({ name }) });
+        document.getElementById("newGroupName").value = "";
+        loadDeviceGroups();
+      } catch (e) { errEl.textContent = e.message; }
+    }
+
+    async function deleteDeviceGroup(groupId) {
+      if (!confirm("Delete this device group?")) return;
+      try {
+        await callApi(`/api/admin/device-groups/${groupId}`, { method: "DELETE" });
+        loadDeviceGroups();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    async function loadCompanies() {
+      const el = document.getElementById("companiesTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/company-users");
+        cachedCompanies = data.users;
+        if (!cachedDeviceGroups.length) await loadDeviceGroupsCache();
+        if (!data.users.length) { el.innerHTML = '<div class="empty">No companies yet.</div>'; return; }
+        const groupOpts = (selected) => '<option value="">None (Shared Pool)</option>' +
+          cachedDeviceGroups.map(g => `<option value="${g.group_id}" ${g.group_id === selected ? "selected" : ""}>${g.name}</option>`).join("");
+        let html = '<table><tr><th>Username</th><th>Company Name</th><th>Trial</th><th>Credit Balance</th><th>Margin %</th><th>Default Group</th><th>Alt. Group</th><th>Created</th><th></th></tr>';
+        for (const u of data.users) {
+          html += `<tr>
+            <td>${u.username}</td>
+            <td>${u.company_name || "-"}</td>
+            <td style="text-align:center;"><input type="checkbox" id="trial-${u.user_id}" ${u.is_trial ? "checked" : ""} onchange="saveTrialFlag('${u.user_id}')" title="Topping up a device's own Registered Phone Number simulates success (no real dial); any other number proceeds normally"></td>
+            <td>${Number(u.credit_balance).toFixed(2)}</td>
+            <td><input type="number" id="margin-${u.user_id}" value="${u.margin_percent}" min="0" max="100" style="width:70px;"></td>
+            <td><select id="defgroup-${u.user_id}">${groupOpts(u.default_group_id)}</select></td>
+            <td><select id="altgroup-${u.user_id}">${groupOpts(u.alternative_group_id)}</select></td>
+            <td>${formatDate(u.created_at)}</td>
+            <td><button class="btn-refresh" onclick="saveMargin('${u.user_id}')">Save Margin</button><button class="btn-refresh" onclick="saveCompanyGroups('${u.user_id}')">Save Groups</button></td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function saveTrialFlag(userId) {
+      const is_trial = document.getElementById("trial-" + userId).checked;
+      try {
+        await callApi(`/api/admin/company-users/${userId}/trial`, { method: "POST", body: JSON.stringify({ is_trial }) });
+        cachedCompanies = [];
+      } catch (e) {
+        alert("Failed: " + e.message);
+        document.getElementById("trial-" + userId).checked = !is_trial; // revert on failure
+      }
+    }
+
+    // ---------- Product Margins (per Telco + Service Type, per company) ----------
+    async function populateProductMarginCompanies() {
+      if (!cachedCompanies.length) {
+        const data = await callApi("/api/admin/company-users");
+        cachedCompanies = data.users;
+      }
+      const el = document.getElementById("productMarginCompanySelect");
+      el.innerHTML = '<option value="">Select a company...</option>' +
+        cachedCompanies.map(u => `<option value="${u.user_id}">${u.company_name || u.username}</option>`).join("");
+    }
+
+    async function loadProductMarginMatrix() {
+      const userId = document.getElementById("productMarginCompanySelect").value;
+      const el = document.getElementById("productMarginMatrix");
+      const saveBtn = document.getElementById("saveProductMarginsBtn");
+      if (!userId) { el.innerHTML = ""; saveBtn.style.display = "none"; return; }
+
+      el.innerHTML = "Loading...";
+      try {
+        if (!cachedTelcos.length) await loadTelcosCache();
+        if (!cachedServiceTypes.length) {
+          const stData = await callApi("/api/admin/service-types");
+          cachedServiceTypes = stData.service_types;
+        }
+        // Re-fetch fresh so we always see current overrides, even if
+        // cachedCompanies was populated before a recent edit.
+        const data = await callApi("/api/admin/company-users");
+        cachedCompanies = data.users;
+        const company = cachedCompanies.find(u => u.user_id === userId);
+        const productMargins = company?.product_margins || {};
+        const defaultMargin = company?.margin_percent ?? 0;
+
+        let html = `<table><tr><th>Telco</th>` + cachedServiceTypes.map(st => `<th>${st.name}</th>`).join("") + `</tr>`;
+        for (const telco of cachedTelcos) {
+          html += `<tr><td>${telco.code}</td>`;
+          for (const st of cachedServiceTypes) {
+            const key = `${telco.code}__${st.id}`;
+            const override = productMargins[key];
+            html += `<td><input type="number" id="pm-${telco.code}-${st.id}" value="${override !== undefined ? override : ""}" placeholder="Default: ${defaultMargin}%" min="0" max="100" style="width:100px;"></td>`;
+          }
+          html += `</tr>`;
+        }
+        el.innerHTML = html + "</table>";
+        saveBtn.style.display = "inline-block";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function saveProductMargins() {
+      const userId = document.getElementById("productMarginCompanySelect").value;
+      const msgEl = document.getElementById("productMarginMsg");
+      if (!userId) return;
+      msgEl.textContent = "Saving...";
+      msgEl.style.color = "var(--text-muted)";
+      try {
+        for (const telco of cachedTelcos) {
+          for (const st of cachedServiceTypes) {
+            const input = document.getElementById(`pm-${telco.code}-${st.id}`);
+            const value = input.value.trim();
+            await callApi(`/api/admin/company-users/${userId}/product-margin`, {
+              method: "POST",
+              body: JSON.stringify({
+                telco: telco.code,
+                service_type_id: st.id,
+                margin_percent: value === "" ? null : Number(value),
+              })
+            });
+          }
+        }
+        cachedCompanies = [];
+        msgEl.textContent = "Saved.";
+        msgEl.style.color = "#34a853";
+        loadProductMarginMatrix();
+      } catch (e) { msgEl.textContent = "Error: " + e.message; msgEl.style.color = "#ea4335"; }
+    }
+
+    async function saveMargin(userId) {
+      const percent = document.getElementById("margin-" + userId).value;
+      try {
+        await callApi(`/api/admin/company-users/${userId}/margin`, { method: "POST", body: JSON.stringify({ margin_percent: Number(percent) }) });
+        cachedCompanies = [];
+        loadCompanies();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    async function saveCompanyGroups(userId) {
+      const defaultGroupId = document.getElementById("defgroup-" + userId).value;
+      const alternativeGroupId = document.getElementById("altgroup-" + userId).value;
+      try {
+        await callApi(`/api/admin/company-users/${userId}/groups`, {
+          method: "POST",
+          body: JSON.stringify({ default_group_id: defaultGroupId || null, alternative_group_id: alternativeGroupId || null })
+        });
+        cachedCompanies = [];
+        loadCompanies();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    async function createCompany() {
+      const username = document.getElementById("newCompanyUsername").value.trim();
+      const password = document.getElementById("newCompanyPassword").value;
+      const company_name = document.getElementById("newCompanyName").value.trim();
+      const errEl = document.getElementById("companyError");
+      errEl.textContent = "";
+      if (!username || !password) { errEl.textContent = "Username and password required"; return; }
+      try {
+        await callApi("/api/admin/company-users", { method: "POST", body: JSON.stringify({ username, password, company_name }) });
+        document.getElementById("newCompanyUsername").value = "";
+        document.getElementById("newCompanyPassword").value = "";
+        document.getElementById("newCompanyName").value = "";
+        loadCompanies();
+      } catch (e) { errEl.textContent = e.message; }
+    }
+
+    // Loads the company list (if not already cached) and fills both the
+    // reload form's and credit inquiry's company dropdowns.
+    async function populateCompanyDropdowns() {
+      if (!cachedCompanies.length) {
+        const data = await callApi("/api/admin/company-users");
+        cachedCompanies = data.users;
+      }
+      const options = cachedCompanies
+        .map(u => `<option value="${u.user_id}">${u.company_name || u.username}</option>`)
+        .join("");
+      document.getElementById("reloadCompanySelect").innerHTML = options || '<option value="">No companies yet</option>';
+      document.getElementById("adjCompanySelect").innerHTML = options || '<option value="">No companies yet</option>';
+      document.getElementById("inquiryCompanySelect").innerHTML = options || '<option value="">No companies yet</option>';
+      document.getElementById("testCompanySelect").innerHTML =
+        '<option value="">General Testing (no billing)</option>' + options;
+    }
+
+    let cachedTelcoConfigs = null;
+
+    // Mirrors the server's extractExtraPlaceholders() so the form shows
+    // exactly the fields that specific telco's template actually needs.
+    function extractExtraPlaceholders(template) {
+      if (!template) return [];
+      const matches = [...template.matchAll(/\{([A-Z0-9_]+)\}/gi)];
+      const reserved = new Set(["PIN", "AMOUNT", "PHONE"]);
+      const seen = new Set();
+      const extras = [];
+      for (const m of matches) {
+        const name = m[1].toUpperCase();
+        if (reserved.has(name) || seen.has(name)) continue;
+        seen.add(name);
+        extras.push(name.toLowerCase());
+      }
+      return extras;
+    }
+
+    async function populateTestServiceTypes() {
+      if (!cachedServiceTypes.length) {
+        const data = await callApi("/api/admin/service-types");
+        cachedServiceTypes = data.service_types;
+      }
+      const tcData = await callApi("/api/admin/telco-configs");
+      cachedTelcoConfigs = tcData.configs;
+
+      document.getElementById("testTelco").innerHTML = tcData.telcos
+        .map((t, i) => `<option value="${t}" ${i === 0 ? "selected" : ""}>${t}</option>`)
+        .join("");
+      document.getElementById("testServiceType").innerHTML = cachedServiceTypes
+        .map(st => `<option value="${st.id}">${st.name}</option>`)
+        .join("");
+      renderTestExtraFields();
+    }
+
+    function renderTestExtraFields() {
+      const telco = document.getElementById("testTelco").value;
+      const stId = document.getElementById("testServiceType").value;
+      const el = document.getElementById("testExtraFields");
+      const hintEl = document.getElementById("testExtraFieldsHint");
+      const template = cachedTelcoConfigs?.[telco]?.[stId]?.template;
+      const extras = extractExtraPlaceholders(template);
+      if (!extras.length) { el.innerHTML = ""; hintEl.style.display = "none"; return; }
+      el.innerHTML = extras.map(f =>
+        `<div class="field-row"><label>${f}</label><input type="text" id="testExtra-${f}"></div>`
+      ).join("");
+      hintEl.style.display = "block";
+    }
+
+    async function sendTestTopup() {
+      const userId = document.getElementById("testCompanySelect").value;
+      const telco = document.getElementById("testTelco").value;
+      const serviceType = document.getElementById("testServiceType").value;
+      const phone = document.getElementById("testPhone").value.trim();
+      const amount = document.getElementById("testAmount").value;
+      const resultEl = document.getElementById("testTopupResult");
+
+      if (!phone || !amount) {
+        resultEl.innerHTML = '<div class="error-msg">Phone and amount are required</div>';
+        return;
+      }
+
+      const template = cachedTelcoConfigs?.[telco]?.[serviceType]?.template;
+      const extraFieldNames = extractExtraPlaceholders(template);
+      const extra_fields = {};
+      for (const f of extraFieldNames) {
+        extra_fields[f] = document.getElementById(`testExtra-${f}`)?.value.trim() || "";
+      }
+
+      resultEl.innerHTML = "Sending...";
+      try {
+        const data = await callApi("/api/admin/test-topup", {
+          method: "POST",
+          body: JSON.stringify({ user_id: userId || null, phone, amount: Number(amount), telco, service_type: serviceType, extra_fields })
+        });
+        resultEl.innerHTML = `<div class="key-value-box" style="background:#e6f4ea; border-color:#b7dfc0;">
+          Job created: <b>${data.job_id}</b><br>
+          Status: <b>${data.status}</b><br>
+          Telco: ${data.telco}
+        </div>`;
+      } catch (e) {
+        resultEl.innerHTML = `<div class="error-msg">${e.message}</div>`;
+      }
+    }
+
+    // ---------- Reload Transactions ----------
+    async function submitReload() {
+      const userId = document.getElementById("reloadCompanySelect").value;
+      const amount = document.getElementById("reloadAmount").value;
+      const date = document.getElementById("reloadDate").value;
+      const remarks = document.getElementById("reloadRemarks").value;
+      const fileInput = document.getElementById("reloadAttachment");
+      const msgEl = document.getElementById("reloadMsg");
+
+      if (!userId) { msgEl.textContent = "Select a company"; msgEl.style.color = "#ea4335"; return; }
+      if (!amount || Number(amount) <= 0) { msgEl.textContent = "Enter a valid amount"; msgEl.style.color = "#ea4335"; return; }
+
+      const formData = new FormData();
+      formData.append("amount", amount);
+      if (date) formData.append("document_date", date);
+      if (remarks) formData.append("remarks", remarks);
+      if (fileInput.files[0]) formData.append("attachment", fileInput.files[0]);
+
+      try {
+        const res = await fetch(baseUrl + `/api/admin/company-users/${userId}/reload`, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + sessionToken },
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Reload failed");
+        msgEl.textContent = `Reload successful. Document: ${data.document_number}, new balance: ${data.new_balance}`;
+        msgEl.style.color = "#34a853";
+        document.getElementById("reloadAmount").value = "";
+        document.getElementById("reloadRemarks").value = "";
+        fileInput.value = "";
+        loadReloadTransactions();
+        cachedCompanies = []; // force refresh so balances stay accurate
+        loadCompanies();
+      } catch (e) {
+        msgEl.textContent = "Error: " + e.message;
+        msgEl.style.color = "#ea4335";
+      }
+    }
+
+    async function loadReloadTransactions() {
+      const el = document.getElementById("reloadTransactionsTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/reload-transactions");
+        if (!data.transactions.length) { el.innerHTML = '<div class="empty">No reload transactions yet.</div>'; return; }
+        let html = '<table><tr><th>Doc No.</th><th>Company</th><th>Date</th><th>Amount</th><th>Remarks</th><th>By</th><th>Attachment</th></tr>';
+        for (const t of data.transactions) {
+          html += `<tr>
+            <td class="mono">${t.document_number}</td>
+            <td>${t.company}</td>
+            <td>${t.document_date}</td>
+            <td class="amount-plus">+${t.amount}</td>
+            <td>${escapeHtml(t.remarks || "-")}</td>
+            <td>${t.created_by_admin}</td>
+            <td>${t.has_attachment ? `<a href="#" onclick="viewAttachment('${t.ledger_id}'); return false;">View</a>` : "-"}</td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function viewAttachment(ledgerId) {
+      try {
+        const data = await callApi(`/api/admin/reload-attachment/${ledgerId}`);
+        window.open(data.url, "_blank");
+      } catch (e) { alert("Failed to open attachment: " + e.message); }
+    }
+
+    // ---------- Adjustment Transactions ----------
+    async function submitAdjustment() {
+      const userId = document.getElementById("adjCompanySelect").value;
+      const amount = document.getElementById("adjAmount").value;
+      const date = document.getElementById("adjDate").value;
+      const remarks = document.getElementById("adjRemarks").value;
+      const fileInput = document.getElementById("adjAttachment");
+      const msgEl = document.getElementById("adjMsg");
+
+      if (!userId) { msgEl.textContent = "Select a company"; msgEl.style.color = "#ea4335"; return; }
+      if (!amount || Number(amount) === 0 || isNaN(Number(amount))) { msgEl.textContent = "Enter a non-zero amount (positive or negative)"; msgEl.style.color = "#ea4335"; return; }
+
+      const formData = new FormData();
+      formData.append("amount", amount);
+      if (date) formData.append("document_date", date);
+      if (remarks) formData.append("remarks", remarks);
+      if (fileInput.files[0]) formData.append("attachment", fileInput.files[0]);
+
+      try {
+        const res = await fetch(baseUrl + `/api/admin/company-users/${userId}/adjustment`, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + sessionToken },
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Adjustment failed");
+        msgEl.textContent = `Adjustment successful. Document: ${data.document_number}, new balance: ${data.new_balance}`;
+        msgEl.style.color = "#34a853";
+        document.getElementById("adjAmount").value = "";
+        document.getElementById("adjRemarks").value = "";
+        fileInput.value = "";
+        loadAdjustmentTransactions();
+        cachedCompanies = []; // force refresh so balances stay accurate
+        loadCompanies();
+      } catch (e) {
+        msgEl.textContent = "Error: " + e.message;
+        msgEl.style.color = "#ea4335";
+      }
+    }
+
+    async function loadAdjustmentTransactions() {
+      const el = document.getElementById("adjustmentTransactionsTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/adjustment-transactions");
+        if (!data.transactions.length) { el.innerHTML = '<div class="empty">No adjustment transactions yet.</div>'; return; }
+        let html = '<table><tr><th>Doc No.</th><th>Company</th><th>Date</th><th>Amount</th><th>Remarks</th><th>By</th><th>Attachment</th></tr>';
+        for (const t of data.transactions) {
+          const isPositive = Number(t.amount) >= 0;
+          const amountDisplay = isPositive
+            ? `<span class="amount-plus">+${t.amount}</span>`
+            : `<span class="amount-minus">${t.amount}</span>`;
+          html += `<tr>
+            <td class="mono">${t.document_number}</td>
+            <td>${t.company}</td>
+            <td>${t.document_date}</td>
+            <td>${amountDisplay}</td>
+            <td>${escapeHtml(t.remarks || "-")}</td>
+            <td>${t.created_by_admin}</td>
+            <td>${t.has_attachment ? `<a href="#" onclick="viewAdjustmentAttachment('${t.ledger_id}'); return false;">View</a>` : "-"}</td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function viewAdjustmentAttachment(ledgerId) {
+      try {
+        const data = await callApi(`/api/admin/adjustment-attachment/${ledgerId}`);
+        window.open(data.url, "_blank");
+      } catch (e) { alert("Failed to open attachment: " + e.message); }
+    }
+
+    async function exportAdjustmentTransactions() {
+      try {
+        const res = await fetch(baseUrl + "/api/admin/adjustment-transactions/export", { headers: { "Authorization": "Bearer " + sessionToken } });
+        if (!res.ok) throw new Error("Export failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "adjustment-transactions.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { alert("Export failed: " + e.message); }
+    }
+
+    // ---------- Credit Inquiry ----------
+    async function exportCreditInquiry() {
+      const userId = document.getElementById("inquiryCompanySelect").value;
+      const from = document.getElementById("inquiryFrom").value;
+      const to = document.getElementById("inquiryTo").value;
+      if (!userId) { alert("Select a company first."); return; }
+      try {
+        let path = `/api/admin/credit-inquiry/export?user_id=${userId}`;
+        if (from) path += `&from=${from}`;
+        if (to) path += `&to=${to}`;
+        const res = await fetch(baseUrl + path, { headers: { "Authorization": "Bearer " + sessionToken } });
+        if (!res.ok) throw new Error("Export failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "credit-statement.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { alert("Export failed: " + e.message); }
+    }
+
+    async function exportReloadTransactions() {
+      try {
+        const res = await fetch(baseUrl + "/api/admin/reload-transactions/export", { headers: { "Authorization": "Bearer " + sessionToken } });
+        if (!res.ok) throw new Error("Export failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "reload-transactions.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { alert("Export failed: " + e.message); }
+    }
+
+    async function runCreditInquiry() {
+      const userId = document.getElementById("inquiryCompanySelect").value;
+      const from = document.getElementById("inquiryFrom").value;
+      const to = document.getElementById("inquiryTo").value;
+      const el = document.getElementById("inquiryResult");
+      if (!userId) { el.innerHTML = '<div class="empty">Select a company first.</div>'; return; }
+      el.innerHTML = "Loading...";
+      try {
+        let path = `/api/admin/credit-inquiry?user_id=${userId}`;
+        if (from) path += `&from=${from}`;
+        if (to) path += `&to=${to}`;
+        const data = await callApi(path);
+
+        let html = `<div class="balance-card" style="display:flex; gap:32px;">
+          <div><div style="font-size:12px; color:#666;">Balance B/F</div><div style="font-size:20px; font-weight:700;">${Number(data.balance_bf).toFixed(2)}</div></div>
+          <div><div style="font-size:12px; color:#666;">Balance C/F</div><div style="font-size:20px; font-weight:700;">${Number(data.balance_cf).toFixed(2)}</div></div>
+          <div><div style="font-size:12px; color:#666;">Current Balance</div><div style="font-size:20px; font-weight:700; color:#1a73e8;">${Number(data.current_balance).toFixed(2)}</div></div>
+        </div>`;
+
+        if (!data.entries.length) {
+          html += '<div class="empty">No transactions in this range.</div>';
+        } else {
+          html += '<table><tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance After</th><th>Details</th></tr>';
+          for (const e of data.entries) {
+            let typeLabel, amountDisplay, details;
+            if (e.type === "reload") {
+              typeLabel = "Reload";
+              amountDisplay = `<span class="amount-plus">+${e.amount}</span>`;
+              details = `Doc: ${e.document_number || "-"}${e.remarks ? " — " + escapeHtml(e.remarks) : ""}`;
+            } else if (e.type === "adjustment") {
+              typeLabel = "Adjustment";
+              const isPositive = Number(e.amount) >= 0;
+              amountDisplay = isPositive ? `<span class="amount-plus">+${e.amount}</span>` : `<span class="amount-minus">${e.amount}</span>`;
+              details = `Doc: ${e.document_number || "-"}${e.remarks ? " — " + escapeHtml(e.remarks) : ""}`;
+            } else {
+              typeLabel = "Usage";
+              amountDisplay = `<span class="amount-minus">-${e.amount}</span>`;
+              details = `${e.phone || ""} ${e.telco ? "(" + e.telco + ")" : ""}`;
+            }
+            html += `<tr><td>${formatDate(e.created_at)}</td><td>${typeLabel}</td><td>${amountDisplay}</td><td>${Number(e.balance_after).toFixed(2)}</td><td>${details}</td></tr>`;
+          }
+          html += "</table>";
+        }
+        el.innerHTML = html;
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    // ---------- USSD Log ----------
+    let ussdLogsRows = [];
+    let ussdLogsCursor = null;
+
+    function todayDateStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    // Defaults both date inputs to today, but only if the user hasn't
+    // already set something — so switching tabs and coming back doesn't
+    // silently reset a deliberately chosen range.
+    function ensureDateRangeDefaults(fromId, toId) {
+      const fromEl = document.getElementById(fromId);
+      const toEl = document.getElementById(toId);
+      if (!fromEl.value && !toEl.value) {
+        const today = todayDateStr();
+        fromEl.value = today;
+        toEl.value = today;
+      }
+    }
+
+    async function loadUssdLogs() {
+      ensureDateRangeDefaults("ussdLogsFrom", "ussdLogsTo");
+      ussdLogsRows = [];
+      ussdLogsCursor = null;
+      const el = document.getElementById("ussdLogsTable");
+      el.innerHTML = "Loading...";
+      const from = document.getElementById("ussdLogsFrom").value;
+      const to = document.getElementById("ussdLogsTo").value;
+      try {
+        const params = new URLSearchParams({ limit: 100 });
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        const data = await callApi(`/api/admin/ussd-logs?${params}`);
+        ussdLogsRows = data.logs;
+        if (data.logs.length) ussdLogsCursor = data.logs[data.logs.length - 1].created_at;
+        document.getElementById("ussdLogsLoadMore").style.display = data.has_more ? "inline-block" : "none";
+        renderUssdLogs();
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function loadMoreUssdLogs() {
+      const from = document.getElementById("ussdLogsFrom").value;
+      const to = document.getElementById("ussdLogsTo").value;
+      try {
+        const params = new URLSearchParams({ limit: 100, before: ussdLogsCursor });
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        const data = await callApi(`/api/admin/ussd-logs?${params}`);
+        ussdLogsRows = ussdLogsRows.concat(data.logs);
+        if (data.logs.length) ussdLogsCursor = data.logs[data.logs.length - 1].created_at;
+        document.getElementById("ussdLogsLoadMore").style.display = data.has_more ? "inline-block" : "none";
+        renderUssdLogs();
+      } catch (e) { alert("Failed to load more: " + e.message); }
+    }
+
+    function renderUssdLogs() {
+      const el = document.getElementById("ussdLogsTable");
+      if (!ussdLogsRows.length) { el.innerHTML = '<div class="empty">No USSD sends yet.</div>'; return; }
+      let html = '<table><tr><th>Channel</th><th>Service Type</th><th>Company</th><th>Device Account</th><th>Date/Time</th><th>Phone No</th><th>Amount</th><th>Telco</th><th>Status</th><th>Reply</th></tr>';
+      for (const r of ussdLogsRows) {
+        const badgeClass = r.channel === "manual" ? "badge-manual" : "badge-rest_api";
+        const badgeLabel = r.channel === "manual" ? "Manual" : "REST API";
+        html += `<tr>
+          <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+          <td>${r.service_type || "Reload"}</td>
+          <td>${r.company || "-"}</td>
+          <td>${r.device_account || "-"}</td>
+          <td>${formatDate(r.created_at)}</td>
+          <td>${r.phone}</td>
+          <td>${r.amount}</td>
+          <td>${r.telco || "-"}</td>
+          <td class="status-${r.status}">${r.status}</td>
+          <td class="mono">${r.raw_response || "-"}</td>
+        </tr>`;
+      }
+      el.innerHTML = html + "</table>";
+    }
+
+    // ---------- Other Logs ----------
+    let otherLogsRows = [];
+    let otherLogsCursor = null;
+
+    async function loadOtherLogs() {
+      ensureDateRangeDefaults("otherLogsFrom", "otherLogsTo");
+      otherLogsRows = [];
+      otherLogsCursor = null;
+      const el = document.getElementById("otherLogsTable");
+      el.innerHTML = "Loading...";
+      const from = document.getElementById("otherLogsFrom").value;
+      const to = document.getElementById("otherLogsTo").value;
+      try {
+        const params = new URLSearchParams({ limit: 150 });
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        const data = await callApi(`/api/admin/other-logs?${params}`);
+        otherLogsRows = data.logs;
+        if (data.logs.length) otherLogsCursor = data.logs[data.logs.length - 1].created_at;
+        document.getElementById("otherLogsLoadMore").style.display = data.has_more ? "inline-block" : "none";
+        renderOtherLogs();
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function loadMoreOtherLogs() {
+      const from = document.getElementById("otherLogsFrom").value;
+      const to = document.getElementById("otherLogsTo").value;
+      try {
+        const params = new URLSearchParams({ limit: 150, before: otherLogsCursor });
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        const data = await callApi(`/api/admin/other-logs?${params}`);
+        otherLogsRows = otherLogsRows.concat(data.logs);
+        if (data.logs.length) otherLogsCursor = data.logs[data.logs.length - 1].created_at;
+        document.getElementById("otherLogsLoadMore").style.display = data.has_more ? "inline-block" : "none";
+        renderOtherLogs();
+      } catch (e) { alert("Failed to load more: " + e.message); }
+    }
+
+    function renderOtherLogs() {
+      const el = document.getElementById("otherLogsTable");
+      if (!otherLogsRows.length) { el.innerHTML = '<div class="empty">No logs yet.</div>'; return; }
+      let html = '<table><tr><th>Date/Time</th><th>Message</th><th>Company</th><th>Device Account</th><th>Job ID</th></tr>';
+      for (const r of otherLogsRows) {
+        html += `<tr>
+          <td>${formatDate(r.created_at)}</td>
+          <td>${escapeHtml(r.message)}</td>
+          <td>${r.company || "-"}</td>
+          <td>${r.device_account || "-"}</td>
+          <td class="mono">${r.job_id || "-"}</td>
+        </tr>`;
+      }
+      el.innerHTML = html + "</table>";
+    }
+
+    // ---------- User Maintenance ----------
+    async function loadUsers() {
+      const el = document.getElementById("usersTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/users");
+        let html = '<table><tr><th>Username</th><th>Created</th><th></th></tr>';
+        for (const u of data.users) {
+          html += `<tr>
+            <td>${u.username}${u.username === currentUsername ? " (you)" : ""}</td>
+            <td>${formatDate(u.created_at)}</td>
+            <td class="actions">
+              <button class="btn-refresh" onclick="changePassword('${u.username}')">Change Password</button>
+              ${u.username !== currentUsername ? `<button class="btn-delete" onclick="deleteUser('${u.username}')">Delete</button>` : ""}
+            </td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function createUser() {
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newPassword").value;
+      const errEl = document.getElementById("userError");
+      errEl.textContent = "";
+      if (!username || !password) { errEl.textContent = "Username and password required"; return; }
+      try {
+        await callApi("/api/admin/users", { method: "POST", body: JSON.stringify({ username, password }) });
+        document.getElementById("newUsername").value = "";
+        document.getElementById("newPassword").value = "";
+        loadUsers();
+      } catch (e) { errEl.textContent = e.message; }
+    }
+
+    async function changePassword(username) {
+      const newPassword = prompt(`New password for ${username}:`);
+      if (!newPassword) return;
+      try {
+        await callApi(`/api/admin/users/${encodeURIComponent(username)}/password`, { method: "PUT", body: JSON.stringify({ password: newPassword }) });
+        alert("Password updated.");
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    async function deleteUser(username) {
+      if (!confirm(`Delete admin user "${username}"?`)) return;
+      try {
+        await callApi(`/api/admin/users/${encodeURIComponent(username)}`, { method: "DELETE" });
+        loadUsers();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    // ---------- Settings ----------
+    async function loadSettings() {
+      try {
+        const data = await callApi("/api/admin/settings");
+        document.getElementById("settingsApiKey").value = data.api_key;
+        document.getElementById("settingsAppSecret").value = data.app_secret;
+        document.getElementById("settingsDocPrefix").value = data.document_prefix;
+        document.getElementById("settingsAdjPrefix").value = data.adjustment_prefix;
+        document.getElementById("settingsLegacyEnabled").checked = data.legacy_key_enabled;
+        document.getElementById("settingsMinTopup").value = data.min_topup_amount;
+        document.getElementById("settingsMaxTopup").value = data.max_topup_amount;
+        document.getElementById("settingsLatestAppVersion").value = data.latest_app_version || "";
+      } catch (e) { document.getElementById("settingsMsg").textContent = "Error: " + e.message; }
+    }
+
+    async function saveSettings() {
+      const api_key = document.getElementById("settingsApiKey").value.trim();
+      const app_secret = document.getElementById("settingsAppSecret").value.trim();
+      const document_prefix = document.getElementById("settingsDocPrefix").value.trim();
+      const adjustment_prefix = document.getElementById("settingsAdjPrefix").value.trim();
+      const legacy_key_enabled = document.getElementById("settingsLegacyEnabled").checked;
+      const min_topup_amount = Number(document.getElementById("settingsMinTopup").value);
+      const max_topup_amount = Number(document.getElementById("settingsMaxTopup").value);
+      const latest_app_version = document.getElementById("settingsLatestAppVersion").value.trim();
+      const msgEl = document.getElementById("settingsMsg");
+      try {
+        await callApi("/api/admin/settings", { method: "POST", body: JSON.stringify({ api_key, app_secret, document_prefix, adjustment_prefix, legacy_key_enabled, min_topup_amount, max_topup_amount, latest_app_version }) });
+        msgEl.textContent = "Saved. Takes effect immediately — remember to update the Android app and any external callers to match.";
+        msgEl.style.color = "#34a853";
+      } catch (e) { msgEl.textContent = "Error: " + e.message; msgEl.style.color = "#ea4335"; }
+    }
+
+    // ---------- Payment Gateway (Billplz) ----------
+    async function loadBillplzSettings() {
+      try {
+        const data = await callApi("/api/admin/settings");
+        document.getElementById("billplzCollectionId").value = data.billplz_collection_id || "";
+        document.getElementById("billplzSandbox").checked = data.billplz_sandbox;
+        document.getElementById("billplzMinReload").value = data.billplz_min_reload;
+        document.getElementById("billplzMaxReload").value = data.billplz_max_reload;
+        document.getElementById("billplzOnlinePrefix").value = data.billplz_online_prefix;
+        document.getElementById("billplzSecretKeyStatus").textContent = data.billplz_secret_key_set
+          ? "✓ Secret Key is configured." : "Not configured yet.";
+        document.getElementById("billplzXSigKeyStatus").textContent = data.billplz_x_signature_key_set
+          ? "✓ X Signature Key is configured." : "Not configured yet.";
+      } catch (e) { document.getElementById("billplzSettingsMsg").textContent = "Error: " + e.message; }
+    }
+
+    async function saveBillplzSettings() {
+      const billplz_secret_key = document.getElementById("billplzSecretKey").value.trim();
+      const billplz_x_signature_key = document.getElementById("billplzXSignatureKey").value.trim();
+      const billplz_collection_id = document.getElementById("billplzCollectionId").value.trim();
+      const billplz_sandbox = document.getElementById("billplzSandbox").checked;
+      const billplz_min_reload = Number(document.getElementById("billplzMinReload").value);
+      const billplz_max_reload = Number(document.getElementById("billplzMaxReload").value);
+      const billplz_online_prefix = document.getElementById("billplzOnlinePrefix").value.trim();
+      const msgEl = document.getElementById("billplzSettingsMsg");
+      try {
+        await callApi("/api/admin/settings", {
+          method: "POST",
+          body: JSON.stringify({ billplz_secret_key, billplz_x_signature_key, billplz_collection_id, billplz_sandbox, billplz_min_reload, billplz_max_reload, billplz_online_prefix })
+        });
+        msgEl.textContent = "Saved.";
+        msgEl.style.color = "#34a853";
+        document.getElementById("billplzSecretKey").value = "";
+        document.getElementById("billplzXSignatureKey").value = "";
+        loadBillplzSettings();
+      } catch (e) { msgEl.textContent = "Error: " + e.message; msgEl.style.color = "#ea4335"; }
+    }
+
+    async function loadBillplzPaymentMethods() {
+      const el = document.getElementById("billplzMethodsTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/billplz/payment-methods");
+        if (!data.payment_methods || !data.payment_methods.length) {
+          el.innerHTML = '<div class="empty">No payment methods returned.</div>';
+          document.getElementById("billplzSaveMethodsBtn").style.display = "none";
+          return;
+        }
+        let html = '<table><tr><th></th><th>Code</th><th>Name</th></tr>';
+        for (const m of data.payment_methods) {
+          html += `<tr>
+            <td><input type="checkbox" id="method-${m.code}" ${m.active ? "checked" : ""}></td>
+            <td class="mono">${m.code}</td>
+            <td>${m.name}</td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+        document.getElementById("billplzSaveMethodsBtn").style.display = "inline-block";
+        window._billplzMethodCodes = data.payment_methods.map(m => m.code);
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function saveBillplzPaymentMethods() {
+      const msgEl = document.getElementById("billplzMethodsMsg");
+      const codes = (window._billplzMethodCodes || []).filter(code => document.getElementById(`method-${code}`)?.checked);
+      try {
+        await callApi("/api/admin/billplz/payment-methods", { method: "POST", body: JSON.stringify({ codes }) });
+        msgEl.textContent = "Payment methods updated on Billplz.";
+        msgEl.style.color = "#34a853";
+        loadBillplzPaymentMethods();
+      } catch (e) { msgEl.textContent = "Error: " + e.message; msgEl.style.color = "#ea4335"; }
+    }
+
+    // ---------- Telcos ----------
+    async function loadTelcos() {
+      const el = document.getElementById("telcosTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/telcos");
+        cachedTelcos = data.telcos;
+        if (!cachedTelcos.length) { el.innerHTML = '<div class="empty">No telcos yet.</div>'; return; }
+        let html = '<table><tr><th>Code</th><th>Display Name</th><th></th></tr>';
+        for (const t of cachedTelcos) {
+          html += `<tr>
+            <td class="mono">${t.code}</td>
+            <td>${t.name}</td>
+            <td><button class="btn-delete" onclick="deleteTelco('${t.code}')">Delete</button></td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function createTelco() {
+      const code = document.getElementById("newTelcoCode").value.trim();
+      const name = document.getElementById("newTelcoName").value.trim();
+      const errEl = document.getElementById("telcoError");
+      errEl.textContent = "";
+      if (!code) { errEl.textContent = "Enter a code"; return; }
+      try {
+        await callApi("/api/admin/telcos", { method: "POST", body: JSON.stringify({ code, name }) });
+        document.getElementById("newTelcoCode").value = "";
+        document.getElementById("newTelcoName").value = "";
+        loadTelcos();
+      } catch (e) { errEl.textContent = e.message; }
+    }
+
+    async function deleteTelco(code) {
+      if (!confirm(`Delete telco ${code}? Any approved device or company relying on it would need updating first.`)) return;
+      try {
+        await callApi(`/api/admin/telcos/${code}`, { method: "DELETE" });
+        loadTelcos();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    // ---------- Service Types ----------
+    let cachedServiceTypes = [];
+
+    async function loadServiceTypes() {
+      const el = document.getElementById("serviceTypesTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi("/api/admin/service-types");
+        cachedServiceTypes = data.service_types;
+        if (!cachedServiceTypes.length) { el.innerHTML = '<div class="empty">No service types yet.</div>'; return; }
+        let html = '<table><tr><th>Name</th><th></th></tr>';
+        for (const st of cachedServiceTypes) {
+          html += `<tr>
+            <td>${st.name}${st.is_default ? ' <span style="color:var(--text-muted); font-size:11px;">(default)</span>' : ""}</td>
+            <td>${st.is_default ? "" : `<button class="btn-delete" onclick="deleteServiceType('${st.id}')">Delete</button>`}</td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function createServiceType() {
+      const name = document.getElementById("newServiceTypeName").value.trim();
+      const errEl = document.getElementById("serviceTypeError");
+      errEl.textContent = "";
+      if (!name) { errEl.textContent = "Enter a name"; return; }
+      try {
+        await callApi("/api/admin/service-types", { method: "POST", body: JSON.stringify({ name }) });
+        document.getElementById("newServiceTypeName").value = "";
+        loadServiceTypes();
+      } catch (e) { errEl.textContent = e.message; }
+    }
+
+    async function deleteServiceType(id) {
+      if (!confirm("Delete this service type? Any telco still using it must be updated first.")) return;
+      try {
+        await callApi(`/api/admin/service-types/${id}`, { method: "DELETE" });
+        loadServiceTypes();
+      } catch (e) { alert("Failed: " + e.message); }
+    }
+
+    // ---------- Telco Configuration ----------
+    let telcoConfigTelcoList = [];
+
+    async function loadTelcoConfig() {
+      const el = document.getElementById("telcoConfigTable");
+      el.innerHTML = "Loading...";
+      try {
+        if (!cachedServiceTypes.length) {
+          const stData = await callApi("/api/admin/service-types");
+          cachedServiceTypes = stData.service_types;
+        }
+        const data = await callApi("/api/admin/telco-configs");
+        telcoConfigTelcoList = data.telcos;
+
+        let html = "";
+        for (const telco of telcoConfigTelcoList) {
+          const telcoServices = data.configs[telco] || {};
+          html += `<div style="border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
+            <div style="font-weight:600; margin-bottom:12px;">${telco}</div>`;
+          for (const st of cachedServiceTypes) {
+            const cfg = telcoServices[st.id] || { enabled: false, template: "" };
+            const fieldHints = "{PIN}, {AMOUNT}, {PHONE}, plus any other {FIELD_NAME} this telco needs";
+            html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+              <input type="checkbox" id="tc-${telco}-${st.id}-enabled" ${cfg.enabled ? "checked" : ""} style="flex-shrink:0;">
+              <span style="width:120px; flex-shrink:0; font-size:13px;">${st.name}</span>
+              <input type="text" id="tc-${telco}-${st.id}-template" value="${(cfg.template || "").replace(/"/g, "&quot;")}" placeholder="e.g. ${fieldHints}" style="flex:1;">
+            </div>`;
+          }
+          html += `</div>`;
+        }
+        el.innerHTML = html || '<div class="empty">No telcos yet — add one in Settings → Telcos.</div>';
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function saveTelcoConfig() {
+      const msgEl = document.getElementById("telcoConfigMsg");
+      msgEl.textContent = "Saving...";
+      msgEl.style.color = "var(--text-muted)";
+      try {
+        for (const telco of telcoConfigTelcoList) {
+          const services = {};
+          for (const st of cachedServiceTypes) {
+            const enabled = document.getElementById(`tc-${telco}-${st.id}-enabled`).checked;
+            const template = document.getElementById(`tc-${telco}-${st.id}-template`).value.trim();
+            services[st.id] = { enabled, template };
+          }
+          await callApi(`/api/admin/telco-configs/${telco}`, { method: "POST", body: JSON.stringify({ services }) });
+        }
+        msgEl.textContent = "Saved. Takes effect on the next job for each telco.";
+        msgEl.style.color = "#34a853";
+      } catch (e) { msgEl.textContent = "Error: " + e.message; msgEl.style.color = "#ea4335"; }
+    }
+
+    async function loadStats() {
+      const days = document.getElementById("statsDays").value;
+      const el = document.getElementById("statsTable");
+      el.innerHTML = "Loading...";
+      try {
+        const data = await callApi(`/api/admin/stats?days=${days}`);
+        let html = '<table><tr><th>Telco</th><th>Total</th><th>Success</th><th>Failed</th><th>Timeout</th><th>Rejected</th><th>Success Rate</th></tr>';
+        for (const s of data.stats) {
+          const rateColor = s.success_rate === null ? "#999" : s.success_rate >= 80 ? "#34a853" : s.success_rate >= 50 ? "#b8860b" : "#ea4335";
+          html += `<tr>
+            <td>${s.telco}</td>
+            <td>${s.total}</td>
+            <td class="amount-plus">${s.success}</td>
+            <td class="amount-minus">${s.failed}</td>
+            <td style="color:#b8860b;">${s.timeout}</td>
+            <td style="color:#ea4335;">${s.rejected}</td>
+            <td style="color:${rateColor}; font-weight:600;">${s.success_rate === null ? "-" : s.success_rate + "%"}</td>
+          </tr>`;
+        }
+        el.innerHTML = html + "</table>";
+
+        const companyEl = document.getElementById("companyStatsTable");
+        if (!data.company_stats.length) {
+          companyEl.innerHTML = '<div class="empty">No jobs in this range.</div>';
+        } else {
+          let companyHtml = '<table><tr><th>Company</th><th>Total</th><th>Success</th><th>Failed</th><th>Timeout</th><th>Rejected</th><th>Success Rate</th></tr>';
+          for (const s of data.company_stats) {
+            const rateColor = s.success_rate === null ? "#999" : s.success_rate >= 80 ? "#34a853" : s.success_rate >= 50 ? "#b8860b" : "#ea4335";
+            companyHtml += `<tr>
+              <td>${s.company}</td>
+              <td>${s.total}</td>
+              <td class="amount-plus">${s.success}</td>
+              <td class="amount-minus">${s.failed}</td>
+              <td style="color:#b8860b;">${s.timeout}</td>
+              <td style="color:#ea4335;">${s.rejected}</td>
+              <td style="color:${rateColor}; font-weight:600;">${s.success_rate === null ? "-" : s.success_rate + "%"}</td>
+            </tr>`;
+          }
+          companyEl.innerHTML = companyHtml + "</table>";
+        }
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+    let auditLogRows = [];
+    let auditLogCursor = null;
+
+    async function loadAuditLog() {
+      ensureDateRangeDefaults("auditLogFrom", "auditLogTo");
+      auditLogRows = [];
+      auditLogCursor = null;
+      const el = document.getElementById("auditLogTable");
+      el.innerHTML = "Loading...";
+      const from = document.getElementById("auditLogFrom").value;
+      const to = document.getElementById("auditLogTo").value;
+      try {
+        const params = new URLSearchParams({ limit: 100 });
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        const data = await callApi(`/api/admin/audit-log?${params}`);
+        auditLogRows = data.entries;
+        if (data.entries.length) auditLogCursor = data.entries[data.entries.length - 1].created_at;
+        document.getElementById("auditLogLoadMore").style.display = data.has_more ? "inline-block" : "none";
+        renderAuditLog();
+      } catch (e) { el.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+    }
+
+    async function loadMoreAuditLog() {
+      const from = document.getElementById("auditLogFrom").value;
+      const to = document.getElementById("auditLogTo").value;
+      try {
+        const params = new URLSearchParams({ limit: 100, before: auditLogCursor });
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        const data = await callApi(`/api/admin/audit-log?${params}`);
+        auditLogRows = auditLogRows.concat(data.entries);
+        if (data.entries.length) auditLogCursor = data.entries[data.entries.length - 1].created_at;
+        document.getElementById("auditLogLoadMore").style.display = data.has_more ? "inline-block" : "none";
+        renderAuditLog();
+      } catch (e) { alert("Failed to load more: " + e.message); }
+    }
+
+    function renderAuditLog() {
+      const el = document.getElementById("auditLogTable");
+      if (!auditLogRows.length) { el.innerHTML = '<div class="empty">No audit entries yet.</div>'; return; }
+      let html = '<table><tr><th>Date/Time</th><th>Actor</th><th>Action</th><th>Details</th></tr>';
+      for (const e of auditLogRows) {
+        html += `<tr>
+          <td>${formatDate(e.created_at)}</td>
+          <td>${e.actor}</td>
+          <td>${e.action}</td>
+          <td>${escapeHtml(e.details || "-")}</td>
+        </tr>`;
+      }
+      el.innerHTML = html + "</table>";
+    }
+
+    // ---------- Helpers ----------
+    function formatDate(iso) {
+      if (!iso) return "-";
+      return new Date(iso).toLocaleString();
+    }
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ---------- Init ----------
+    if (sessionToken && currentUsername) {
+      showMainApp();
+    }
+  </script>
+
+</body>
+</html>

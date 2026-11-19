@@ -1,0 +1,18 @@
+# Secrets — never commit
+.env
+service-account.json
+google-services.json
+*.keystore
+*.jks
+
+# Node
+node_modules/
+npm-debug.log
+
+# Android / Gradle
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
