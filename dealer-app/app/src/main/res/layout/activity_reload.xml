@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:fitsSystemWindows="true">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+        app:navigationIcon="@drawable/ic_back"
+        app:title="New reload" />
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+
+            <!-- FORM -->
+            <LinearLayout
+                android:id="@+id/form"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/txtBalance"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progressForm"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:indeterminate="true" android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Telco"
+                    android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipsTelco"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    app:singleSelection="true" app:selectionRequired="true" />
+
+                <TextView
+                    android:id="@+id/txtNoTelco"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Reload is not available right now. Please contact your dealer."
+                    android:textColor="#C62828" android:visibility="gone" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutPhone"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Customer phone number">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/inputPhone"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:inputType="phone" android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutAmount"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Reload amount (RM)">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/inputAmount"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipsAmount"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/txtDeduct"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSubmit"
+                    android:layout_width="match_parent" android:layout_height="64dp"
+                    android:layout_marginTop="20dp"
+                    android:text="Reload"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <!-- RESULT -->
+            <LinearLayout
+                android:id="@+id/result"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="center_horizontal"
+                android:padding="24dp" android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/txtResultSummary"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/progressResult"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:indeterminate="true" />
+
+                <TextView
+                    android:id="@+id/txtStatus"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:textAppearance="?attr/textAppearanceHeadlineMedium" />
+
+                <TextView
+                    android:id="@+id/txtResponse"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNew"
+                    android:layout_width="match_parent" android:layout_height="56dp"
+                    android:layout_marginTop="32dp"
+                    android:text="New reload" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDone"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent" android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Done" />
+            </LinearLayout>
+        </FrameLayout>
+    </ScrollView>
+</LinearLayout>

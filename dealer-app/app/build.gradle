@@ -1,0 +1,43 @@
+plugins {
+    id("com.android.application")
+}
+
+android {
+    namespace = "com.ereload.dealer"
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "com.ereload.dealer"
+        minSdk = 26
+        targetSdk = 37
+        // Bump both on every build.
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.19.0")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("com.google.android.material:material:1.14.0")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+}

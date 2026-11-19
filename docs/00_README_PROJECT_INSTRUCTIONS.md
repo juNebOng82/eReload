@@ -10,6 +10,7 @@ A gateway that lets many **companies** (tenants) top up / pay telco services thr
 Company system ──REST (x-api-key)──▶ Server (Cloud Run) ──FCM──▶ Android eReload app ──USSD──▶ Telco
                                           ▲                            │
                                           └──── POST /api/fcm/callback ┘
+Sub-dealer app (com.ereload.dealer) ──JWT──▶ Server (/api/portal/topup)
 Admin  ──▶ /admin.html     Company ──▶ /portal.html     Billplz ──webhook──▶ /api/billplz/callback
 ```
 
@@ -28,6 +29,7 @@ Admin  ──▶ /admin.html     Company ──▶ /portal.html     Billplz ─�
 | `10_DECISION_LOG.md` | Why things are the way they are (user-confirmed decisions) |
 | `11_KNOWN_LIMITATIONS_AND_ROADMAP.md` | Open issues and next ideas |
 | `12_CHANGELOG.md` | Feature history |
+| `13_DEALER_APP.md` | Sub-dealer app (`com.ereload.dealer`): reload on behalf of customers |
 | `../source/*.md` | Every source file embedded in code fences (secrets redacted) |
 
 ## Working rules for Claude when using this project

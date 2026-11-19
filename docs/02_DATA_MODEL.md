@@ -8,7 +8,7 @@
 | `api_keys` | auto | `userId, name, keyHash/prefix, createdAt, active` (full key shown once) |
 | `credit_ledger` | auto | `userId, type: reload\|adjustment\|usage, amount (signed for adjustment), balanceAfter, docNo, docDate, remarks, attachmentPath, createdBy, jobId, billedAmount, marginPercent, createdAt` |
 | `counters` | per prefix + yyMM | sequential doc numbers: `RC` reload, `AJ` adjustment, `OL` Billplz online → `<prefix><yyMM><NNN>` |
-| `jobs` | job id | `userId, phone, amount, billedAmount, marginPercent, telco, groupId, serviceTypeId, ussdTemplate, status, installationId, rawResponse, idempotencyKey, webhookUrl, channel, createdAt, updatedAt` |
+| `jobs` | job id | `userId, phone, amount, billedAmount, marginPercent, telco, groupId, serviceTypeId, ussdTemplate, status, installationId, rawResponse, idempotencyKey, webhookUrl, channel (`rest_api` \| `dealer_app` \| legacy `manual`), createdAt, updatedAt` |
 | `devices` | `deviceDocId` | active slot: `installationId, token, telco, groupId, timeoutSeconds, currentJobId, appVersion, customFields, account, registeredPhoneNumber` |
 | `devices_registry` | installationId | `telco, token, status: pending\|approved\|rejected\|revoked, approvedTelco, approvedGroupId, appVersion, account, registeredPhoneNumber, customFields, createdAt` |
 | `device_groups` | auto | `name, description` (delete blocked if in use) |

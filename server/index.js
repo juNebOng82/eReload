@@ -2476,7 +2476,8 @@ function extractExtraPlaceholders(template) {
   return extras;
 }
 
-async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, idempotencyKey, serviceTypeId, extraFields }) {
+async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, idempotencyKey, serviceTypeId, extraFields, channel = "rest_api" }) {
+  const channelLabel = channel === "dealer_app" ? "Dealer app" : "REST API";
   if (!phone || !amount) {
     return { httpStatus: 400, body: { error: "phone and amount are required" } };
   }
@@ -2566,7 +2567,7 @@ async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, i
       const rejectedJobRef = await db.collection("jobs").add({
         phone, amount: amountNum, billedAmount, telco: telcoKey,
         groupId: resolvedGroupId, serviceTypeId: resolvedServiceTypeId,
-        channel: "rest_api", status: "rejected",
+        channel, status: "rejected",
         rawResponse: `Insufficient credit balance (balance: ${balance}, required: ${billedAmount})`,
         webhookUrl: null, userId: companyUserId, idempotencyKey: idempotencyKey || null,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -2582,7 +2583,7 @@ async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, i
     const simulatedJobData = {
       phone, amount: amountNum, billedAmount, telco: telcoKey,
       groupId: resolvedGroupId, serviceTypeId: resolvedServiceTypeId,
-      channel: "rest_api", status: "success",
+      channel, status: "success",
       rawResponse: "Simulated success (Trial self-test — no real dial performed)",
       webhookUrl: webhookUrl || null, userId: companyUserId, idempotencyKey: idempotencyKey || null,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -2644,7 +2645,7 @@ async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, i
         groupId: resolvedGroupId,
         serviceTypeId: resolvedServiceTypeId,
         ussdTemplate,
-        channel: "rest_api",
+        channel,
         status: "rejected",
         rawResponse: `Insufficient credit balance (balance: ${balance}, required: ${billedAmount})`,
         webhookUrl: null,
@@ -2655,7 +2656,7 @@ async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, i
       });
 
       await appendServerLog(
-        `REST API top-up REJECTED for ${companyLabel} — insufficient credit (balance: ${balance}, required: ${billedAmount}) for ${phone} (${telcoKey})`,
+        `${channelLabel} top-up REJECTED for ${companyLabel} — insufficient credit (balance: ${balance}, required: ${billedAmount}) for ${phone} (${telcoKey})`,
         rejectedJobRef.id
       );
 
@@ -2671,7 +2672,7 @@ async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, i
     groupId: resolvedGroupId,
     serviceTypeId: resolvedServiceTypeId,
     ussdTemplate,
-    channel: "rest_api",
+    channel,
     status: "queued",
     webhookUrl: webhookUrl || null,
     rawResponse: null,
@@ -2691,7 +2692,7 @@ async function performTopup({ companyUserId, phone, amount, telco, webhookUrl, i
     companyLabel = names[companyUserId] || companyUserId;
   }
   await appendServerLog(
-    `REST API top-up created by ${companyLabel} for ${phone} (${telcoKey}${resolvedGroupId ? `, group: ${resolvedGroupId}` : ""}), amount ${amountNum}`,
+    `${channelLabel} top-up created by ${companyLabel} for ${phone} (${telcoKey}${resolvedGroupId ? `, group: ${resolvedGroupId}` : ""}), amount ${amountNum}`,
     jobRef.id
   );
 
@@ -2861,6 +2862,135 @@ app.get("/api/topup/:jobId", resolveApiKey, async (req, res) => {
     status: data.status,
     raw_response: data.rawResponse,
   });
+});
+
+// =============================================================================
+// SUB-DEALER APP (com.ereload.dealer)
+// The sub-dealer Android app logs in with the same username/password as the
+// company portal (POST /api/portal/login) and uses the company session JWT.
+// Reloads go through the exact same performTopup path as /api/topup — same
+// margin, credit pre-check, deduction-on-success-only and group routing —
+// only tagged channel "dealer_app" so they can be told apart in logs.
+// =============================================================================
+
+async function getServiceTypeNamesMap(ids) {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const names = {};
+  await Promise.all(unique.map(async (id) => {
+    const doc = await db.collection("service_types").doc(id).get();
+    if (doc.exists) names[id] = doc.data().name;
+  }));
+  return names;
+}
+
+function dealerJobJson(id, data, serviceTypeNames = {}) {
+  return {
+    job_id: id,
+    phone: data.phone,
+    amount: data.amount,
+    billed_amount: data.billedAmount ?? null,
+    telco: data.telco || null,
+    service_type: data.serviceTypeId ? (serviceTypeNames[data.serviceTypeId] || data.serviceTypeId) : "Reload",
+    channel: data.channel || "rest_api",
+    status: data.status,
+    raw_response: data.rawResponse || null,
+    created_at: data.createdAt ? data.createdAt.toDate().toISOString() : null,
+    updated_at: data.updatedAt ? data.updatedAt.toDate().toISOString() : null,
+  };
+}
+
+// Everything the app's Reload screen needs in one call: balance, the telcos
+// that currently have Reload enabled, this company's margin per telco (so the
+// confirm screen can show the amount that will be deducted), and the
+// configured min/max top-up amount.
+app.get("/api/portal/reload-options", requireCompanySession, async (req, res) => {
+  const userDoc = await db.collection("company_users").doc(req.companyUserId).get();
+  if (!userDoc.exists) return res.status(404).json({ error: "Account not found" });
+  const userData = userDoc.data();
+
+  await ensureTelcoConfigsSeeded();
+  const reloadServiceTypeId = await ensureDefaultServiceType();
+  const settings = await getSettings();
+
+  const telcos = [];
+  for (const code of await getValidTelcos()) {
+    const cfg = await db.collection("telco_configs").doc(code).get();
+    const service = cfg.exists ? cfg.data().services?.[reloadServiceTypeId] : null;
+    if (!service || !service.enabled) continue;
+    telcos.push({ code, margin_percent: resolveMarginPercent(userData, code, reloadServiceTypeId) });
+  }
+
+  res.json({
+    company_name: userData.companyName || userData.username,
+    credit_balance: userData.creditBalance || 0,
+    min_amount: settings.minTopupAmount,
+    max_amount: settings.maxTopupAmount,
+    telcos,
+  });
+});
+
+app.post("/api/portal/topup", requireCompanySession, async (req, res) => {
+  const { phone, amount, telco, idempotency_key } = req.body || {};
+  const cleanPhone = String(phone || "").replace(/[\s-]/g, "");
+  if (cleanPhone && !/^\+?\d{8,15}$/.test(cleanPhone)) {
+    return res.status(400).json({ error: "Phone number must be 8 to 15 digits" });
+  }
+  const result = await performTopup({
+    companyUserId: req.companyUserId,
+    phone: cleanPhone, amount, telco,
+    idempotencyKey: idempotency_key,
+    channel: "dealer_app",
+  });
+  res.status(result.httpStatus).json(result.body);
+});
+
+// All of this company's jobs (any channel), newest first — includes queued,
+// pending, failed, timeout and rejected ones, which the credit ledger
+// doesn't show. Same in-memory filtering approach as getLedgerStatement
+// (single-field query, no composite index needed).
+app.get("/api/portal/jobs", requireCompanySession, async (req, res) => {
+  const { from, to, status } = req.query;
+  const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+  const snapshot = await db.collection("jobs").where("userId", "==", req.companyUserId).get();
+
+  const fromMs = from ? new Date(from + "T00:00:00").getTime() : null;
+  const toMs = to ? new Date(to + "T23:59:59").getTime() : null;
+
+  let docs = snapshot.docs.map((doc) => ({ doc, ms: doc.data().createdAt ? doc.data().createdAt.toMillis() : 0 }));
+  if (fromMs) docs = docs.filter((d) => d.ms >= fromMs);
+  if (toMs) docs = docs.filter((d) => d.ms <= toMs);
+  if (status) docs = docs.filter((d) => d.doc.data().status === status);
+  docs.sort((a, b) => b.ms - a.ms);
+  const page = docs.slice(0, limit);
+
+  const serviceTypeNames = await getServiceTypeNamesMap(page.map((d) => d.doc.data().serviceTypeId));
+  res.json({
+    jobs: page.map((d) => dealerJobJson(d.doc.id, d.doc.data(), serviceTypeNames)),
+    has_more: docs.length > limit,
+  });
+});
+
+app.get("/api/portal/jobs/:jobId", requireCompanySession, async (req, res) => {
+  const jobRef = db.collection("jobs").doc(req.params.jobId);
+  const jobDoc = await jobRef.get();
+  if (!jobDoc.exists || jobDoc.data().userId !== req.companyUserId) {
+    return res.status(404).json({ error: "Reload not found" });
+  }
+  const data = jobDoc.data();
+
+  // Same stale-pending check as GET /api/topup/:jobId, so the app's status
+  // screen doesn't wait for the next cron tick.
+  if (data.status === "pending") {
+    const createdAtMs = data.createdAt ? data.createdAt.toMillis() : Date.now();
+    if (Date.now() - createdAtMs > JOB_TIMEOUT_MS) {
+      await jobRef.update({ status: "timeout", updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+      data.status = "timeout";
+      await completeJobAndAdvanceQueue(data.groupId || null, data.telco, req.params.jobId);
+    }
+  }
+
+  const serviceTypeNames = await getServiceTypeNamesMap([data.serviceTypeId]);
+  res.json(dealerJobJson(jobDoc.id, data, serviceTypeNames));
 });
 
 // =============================================================================

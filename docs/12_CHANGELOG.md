@@ -8,3 +8,4 @@
 - App rename eReload (`com.ereload.app`, v1.16), test mode removed
 - Trial company simulation; revoke bug fix; wake lock + callback idempotency
 - Renames; log date filters; per-product margin per company
+- Sub-dealer app `com.ereload.dealer` v1.0 (login, balance, reload for customers, my reloads, statement); portal endpoints `reload-options`, `topup`, `jobs`; jobs tagged `channel: dealer_app`

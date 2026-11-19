@@ -27,7 +27,15 @@ Webhook (if `webhook_url`) is POSTed the job result on completion.
 | GET | `/` | Redirect/health |
 
 ## D. Portal (`Authorization: Bearer <company JWT>`)
-`POST /api/portal/login` · `GET|POST /api/portal/profile` · `PUT /api/portal/password` · `GET|POST /api/portal/api-keys` · `DELETE /api/portal/api-keys/:keyId` · `GET /api/portal/ledger` (+ `/export` CSV) · `GET /api/portal/reload-attachment/:ledgerId` · `GET /api/portal/adjustment-attachment/:ledgerId` · `POST /api/portal/billplz/create-bill` · `GET /api/portal/billplz/verify-redirect`
+`POST /api/portal/login` · `GET|POST /api/portal/profile` · `PUT /api/portal/password` · `GET|POST /api/portal/api-keys` · `DELETE /api/portal/api-keys/:keyId` · `GET /api/portal/ledger` (+ `/export` CSV) · `GET /api/portal/reload-options` · `POST /api/portal/topup` · `GET /api/portal/jobs` · `GET /api/portal/jobs/:jobId` · `GET /api/portal/reload-attachment/:ledgerId` · `GET /api/portal/adjustment-attachment/:ledgerId` · `POST /api/portal/billplz/create-bill` · `GET /api/portal/billplz/verify-redirect`
+
+### Sub-dealer app endpoints (company JWT, see `13_DEALER_APP.md`)
+| Method | Path | Body / query | Notes |
+|---|---|---|---|
+| GET | `/api/portal/reload-options` | — | `{company_name, credit_balance, min_amount, max_amount, telcos:[{code, margin_percent}]}`; only telcos with Reload enabled |
+| POST | `/api/portal/topup` | `{phone, amount, telco, idempotency_key?}` | Same as `/api/topup` (same billing/routing), job `channel: "dealer_app"`. Phone 8–15 digits (spaces/dashes stripped) |
+| GET | `/api/portal/jobs` | `from?, to?, status?, limit?` (default 100, max 500) | Own jobs, all statuses, newest first: `{jobs:[{job_id, phone, amount, billed_amount, telco, service_type, channel, status, raw_response, created_at, updated_at}], has_more}` |
+| GET | `/api/portal/jobs/:jobId` | — | One own job (404 for other companies' jobs); marks a stale pending job as timeout like `/api/topup/:jobId` |
 
 ## E. Admin (`Authorization: Bearer <admin JWT>`)
 **Session/users:** `POST /api/admin/login` · `GET|POST /api/admin/users` · `PUT /api/admin/users/:username/password` · `DELETE /api/admin/users/:username`
